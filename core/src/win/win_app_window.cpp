@@ -49,6 +49,13 @@ auto WinAppWindow::is_open() const -> bool {
     return window_handle != nullptr;
 }
 
+auto WinAppWindow::type() const -> Type {
+    return Type::WINDOWS;
+}
+
+auto WinAppWindow::hwnd() const -> HWND {
+    return window_handle;
+}
 
 auto WinAppWindow::register_window_class() -> void {
     auto window_class = WNDCLASSEXA{

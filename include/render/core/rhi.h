@@ -1,11 +1,12 @@
 #ifndef RHI_H
 #define RHI_H
 #include "swap_chain.h"
+#include "core/app_window.h"
 
 namespace ducklib::render {
 class Rhi {
 public:
-    auto create_swap_chain() -> SwapChain;
+    virtual ~Rhi();
 };
 }
 

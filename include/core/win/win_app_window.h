@@ -1,5 +1,6 @@
 #ifndef WIN_APP_WINDOW_H
 #define WIN_APP_WINDOW_H
+#include <string_view>
 #include <Windows.h>
 
 #include "core/app_window.h"
@@ -13,6 +14,9 @@ public:
     auto process_messages() -> void override;
     auto close() -> void override;
     auto is_open() const -> bool override;
+    auto type() const -> Type override;
+
+    auto hwnd() const -> HWND;
 
 private:
     HWND window_handle;
