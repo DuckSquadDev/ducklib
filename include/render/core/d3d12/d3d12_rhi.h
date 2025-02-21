@@ -17,7 +17,7 @@ public:
     ~D3d12Rhi() override;
 
     auto enumerate_adapters() -> std::vector<std::shared_ptr<Adapter>> override;
-    auto create_device(Adapter* adapter) -> Device* override;
+    auto create_device(Adapter* adapter) -> std::unique_ptr<Device> override;
 
 private:
 #ifdef _DEBUG

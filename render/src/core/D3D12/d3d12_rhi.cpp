@@ -60,3 +60,15 @@ std::vector<std::shared_ptr<Adapter>> D3d12Rhi::enumerate_adapters() {
 
     return adapters;
 }
+
+auto D3d12Rhi::create_device(Adapter* adapter) -> std::unique_ptr<Device> override {
+    ID3D12Device* d3d12_device = nullptr;
+    auto dxgi_adapter = reinterpret_cast<D3d12Adapter*>(adapter)->dxgi_adapter_handle();
+
+    if (D3D12CreateDevice(dxgi_adapter, D3D_FEATURE_LEVEL_12_2, IID_PPV_ARGS(&d3d12_device)) != S_OK) {
+        throw std::runtime_error("Failed to create D3D12 device");
+    }
+
+    return std::make_unique<D3d12Device>(d3d12_device, dxgi_factory);
+}
+}

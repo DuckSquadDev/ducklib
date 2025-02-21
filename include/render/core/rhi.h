@@ -8,7 +8,7 @@ public:
     virtual ~Rhi();
 
     virtual auto enumerate_adapters() -> std::vector<std::shared_ptr<Adapter>>;
-    virtual auto create_device(Adapter* adapter) -> Device*;
+    virtual auto create_device(Adapter* adapter) -> std::unique_ptr<Device>;
 };
 }
 
