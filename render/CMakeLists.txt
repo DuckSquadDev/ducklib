@@ -22,7 +22,13 @@ add_library(${PROJECT_NAME} STATIC
         ../include/render/core/d3d12/resources/d3d12_swap_chain.h
         ../include/render/core/descriptor_set.h
         ../include/render/core/d3d12/resources/d3d12_descriptor_set.h
-        ../include/render/core/d3d12/d3d12_utility.h)
+        ../include/render/core/d3d12/d3d12_utility.h
+        ../include/render/core/command_queue.h
+        ../include/render/core/d3d12/d3d12_command_queue.h
+        ../include/render/core/command_list.h
+        ../include/render/core/d3d12/d3d12_command_list.h
+        ../include/render/core/adapter.h
+        ../include/render/core/d3d12/d3d12_adapter.h)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ../include)
 set_target_properties(${PROJECT_NAME} PROPERTIES

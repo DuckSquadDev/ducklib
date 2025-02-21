@@ -9,23 +9,30 @@
 #include "render/core/d3d12/resources/d3d12_descriptor_set.h"
 
 namespace ducklib::render {
+D3d12Device::D3d12Device(
+    Microsoft::WRL::ComPtr<ID3D12Device5> d3d12_device,
+    Microsoft::WRL::ComPtr<IDXGIFactory4> dxgi_factory)
+    : d3d12_device(d3d12_device), dxgi_factory(dxgi_factory) {
+    create_queue(QueueType::GRAPHICS);
+}
+
 D3d12Device::~D3d12Device() {
-    if (d3d_device) {
-        d3d_device->Release();
+    for (auto* descriptor_set_layout : descriptor_set_layouts) {
+        delete descriptor_set_layout;
     }
 
-    if (dxgi_factory) {
-        dxgi_factory->Release();
+    for (auto* descriptor_set : descriptor_sets) {
+        delete descriptor_set;
     }
 }
 
 auto D3d12Device::create_descriptor_set_layout(
     std::span<DescriptorSetLayoutItem> layout_items)
     -> DescriptorSetLayout* {
-    auto layout = std::unique_ptr<D3d12DescriptorSetLayout>(new D3d12DescriptorSetLayout(layout_items));
-    descriptor_set_layouts.push_back(std::move(layout));
+    auto layout = new D3d12DescriptorSetLayout{ layout_items };
+    descriptor_set_layouts.push_back(layout);
 
-    return layout.get();
+    return layout;
 }
 
 DescriptorSet* D3d12Device::create_descriptor_set(
@@ -72,7 +79,7 @@ auto D3d12Device::create_swap_chain(
     auto swap_chain_1 = static_cast<IDXGISwapChain1*>(nullptr);
     auto swap_chain_3 = static_cast<IDXGISwapChain3*>(nullptr);
 
-    if (dxgi_factory->CreateSwapChainForHwnd(d3d_device, hwnd, &swap_chain_desc, nullptr, nullptr, &swap_chain_1) !=
+    if (dxgi_factory->CreateSwapChainForHwnd(d3d12_device, hwnd, &swap_chain_desc, nullptr, nullptr, &swap_chain_1) !=
         S_OK) {
         throw std::runtime_error("Failed to create dxgi swap chain");
     }
