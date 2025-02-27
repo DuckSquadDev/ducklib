@@ -9,26 +9,19 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(${PROJECT_NAME} STATIC
-        ../include/render/core/Rhi.h
-        ../include/render/core/swap_chain.h
-        src/core/d3d12/d3d12_rhi.cpp
-        ../include/render/core/d3d12/d3d12_rhi.h
-        ../include/render/core/device.h
-        ../include/render/core/d3d12/d3d12_device.h
-        src/core/D3D12/d3d12_device.cpp
-        ../include/render/core/format.h
-        ../include/render/core/d3d12/d3d12_format.h
-        ../include/render/core/resources/swap_chain.h
-        ../include/render/core/d3d12/resources/d3d12_swap_chain.h
-        ../include/render/core/descriptor_set.h
-        ../include/render/core/d3d12/resources/d3d12_descriptor_set.h
-        ../include/render/core/d3d12/d3d12_utility.h
-        ../include/render/core/command_queue.h
-        ../include/render/core/d3d12/d3d12_command_queue.h
-        ../include/render/core/command_list.h
-        ../include/render/core/d3d12/d3d12_command_list.h
-        ../include/render/core/adapter.h
-        ../include/render/core/d3d12/d3d12_adapter.h)
+        ../include/render/rhi/swap_chain.h
+        src/rhi/rhi.cpp
+        ../include/render/rhi/rhi.h
+        ../include/render/rhi/device.h
+        src/rhi/device.cpp
+        ../include/render/rhi/constants.h
+        ../include/render/rhi/resources/swap_chain.h
+        ../include/render/rhi/resources/descriptor_set.h
+        ../include/render/rhi/command_queue.h
+        ../include/render/rhi/command_list.h
+        src/rhi/command_queue.cpp
+        ../include/render/rhi/resources/vertex_buffer.h
+        ../include/render/rhi/types.h)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ../include)
 set_target_properties(${PROJECT_NAME} PROPERTIES
