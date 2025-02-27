@@ -4,15 +4,15 @@
 #include "../../../include/render/rhi/rhi.h"
 
 namespace ducklib::render {
-auto create_rhi(Rhi* out_rhi) {
+auto create_rhi(Rhi* out_rhi) -> void {
 #ifdef _DEBUG
-    if (DXGIGetDebugInterface(IID_PPV_ARGS(&out_rhi->dxgi_debug)) != S_OK) {
-        std::abort();
-    }
-
-    if (out_rhi->dxgi_debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL) != S_OK) {
-        std::abort();
-    }
+    // if (DXGIGetDebugInterface(IID_PPV_ARGS(&out_rhi->dxgi_debug)) != S_OK) {
+    //     std::abort();
+    // }
+    //
+    // if (out_rhi->dxgi_debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL) != S_OK) {
+    //     std::abort();
+    // }
 
     if (D3D12GetDebugInterface(IID_PPV_ARGS(&out_rhi->d3d12_debug)) != S_OK) {
         std::abort();
@@ -38,20 +38,17 @@ auto Rhi::enumerate_adapters(Adapter* out_adapters, uint32_t max_adapter_count) 
 
         out_adapters[i].dxgi_adapter = ComPtr<IDXGIAdapter1>(current_adapter);
         WideCharToMultiByte(CP_ACP, 0, adapter_desc.Description, -1, out_adapters[i].name, sizeof(out_adapters[i]), nullptr, nullptr);
-        
+
         ++i;
     }
 
     return i;
 }
 
-auto Rhi::create_device(Adapter* adapter, Device* out_device) -> Device* {
-    ID3D12Device* d3d12_device = nullptr;
-    
-    if (D3D12CreateDevice(adapter->dxgi_adapter.Get(), D3D_FEATURE_LEVEL_12_2, IID_PPV_ARGS(&d3d12_device)) != S_OK) {
+auto Rhi::create_device(Adapter* adapter, Device* out_device) -> void {
+    if (FAILED(
+        D3D12CreateDevice(adapter->dxgi_adapter.Get(), D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(out_device->d3d12_device.GetAddressOf())))) {
         std::abort();
     }
-
-    new (out_device) Device(ComPtr<ID3D12Device>(d3d12_device));
 }
 }

@@ -20,7 +20,6 @@ add_library(${PROJECT_NAME} STATIC
         ../include/render/rhi/command_queue.h
         ../include/render/rhi/command_list.h
         src/rhi/command_queue.cpp
-        ../include/render/rhi/resources/vertex_buffer.h
         ../include/render/rhi/types.h)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ../include)

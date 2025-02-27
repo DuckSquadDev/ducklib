@@ -12,4 +12,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE ../../../include)
 link_directories(${CMAKE_SOURCE_DIR}/dir)
 target_link_libraries(${PROJECT_NAME}
         ducklib-core
-        ducklib-render)
+        ducklib-render
+        d3d12
+        dxgi)

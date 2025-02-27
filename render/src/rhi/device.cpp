@@ -6,7 +6,7 @@
 #include "render/rhi/command_list.h"
 
 namespace ducklib::render {
-auto Device::create_queue(QueueType type, CommandQueue* out_queue) {
+auto Device::create_queue(QueueType type, CommandQueue* out_queue) -> void {
     auto queue_desc = D3D12_COMMAND_QUEUE_DESC{
         .Type = to_d3d12_queue_type(type),
         .Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL,
@@ -19,7 +19,7 @@ auto Device::create_queue(QueueType type, CommandQueue* out_queue) {
     }
 }
 
-auto Device::create_command_list(QueueType queue_type, CommandList* out_list) {
+auto Device::create_command_list(QueueType queue_type, CommandList* out_list) -> void {
     out_list->type = queue_type;
     auto d3d12_type = to_d3d12_queue_type(queue_type);
 
@@ -30,6 +30,33 @@ auto Device::create_command_list(QueueType queue_type, CommandList* out_list) {
     if (d3d12_device->CreateCommandList(0, d3d12_type, out_list->d3d12_alloc, nullptr, IID_PPV_ARGS(&out_list->d3d12_list)) !=
         S_OK) {
         throw std::runtime_error("failed to create D3D12 command list");
+    }
+}
+
+auto Device::create_vertex_buffer(uint64_t byte_size, VertexBuffer* out_buffer) -> void {
+    D3D12_HEAP_PROPERTIES heap_props = {};
+    D3D12_RESOURCE_DESC resource_desc = {};
+
+    heap_props.Type = D3D12_HEAP_TYPE_UPLOAD;
+
+    resource_desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    resource_desc.Width = byte_size;
+    resource_desc.Format = DXGI_FORMAT_UNKNOWN;
+    resource_desc.Height = 1;
+    resource_desc.DepthOrArraySize = 1;
+    resource_desc.MipLevels = 1;
+    resource_desc.SampleDesc.Count = 1;
+    resource_desc.SampleDesc.Quality = 0;
+    resource_desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+    if (d3d12_device->CreateCommittedResource(
+        &heap_props,
+        D3D12_HEAP_FLAG_NONE,
+        &resource_desc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&out_buffer->d3d12_resource)) != S_OK) {
+        std::abort();
     }
 }
 

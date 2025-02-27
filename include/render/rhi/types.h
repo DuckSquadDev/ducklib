@@ -11,6 +11,10 @@ struct Adapter {
     ComPtr<IDXGIAdapter1> dxgi_adapter = nullptr;
     char name[128] = {};
 };
+
+struct VertexBuffer {
+    ID3D12Resource1* d3d12_resource;
+};
 }
 
 #endif //TYPES_H
