@@ -20,12 +20,24 @@ add_library(${PROJECT_NAME} STATIC
         ../include/render/rhi/command_queue.h
         ../include/render/rhi/command_list.h
         src/rhi/command_queue.cpp
-        ../include/render/rhi/types.h)
+        ../include/render/rhi/types.h
+        src/rhi/command_list.cpp
+        ../include/render/resource_manager.h
+        src/resource_manager.cpp
+        ../include/render/rhi/shader.h
+        src/rhi/shader.cpp
+        src/rhi/types.cpp)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ../include)
 set_target_properties(${PROJECT_NAME} PROPERTIES
         PREFIX ""
         OUTPUT_NAME ${PROJECT_NAME}
         SUFFIX ".lib")
+target_link_libraries(${PROJECT_NAME}
+        ducklib-core
+        d3d12
+        dxgi
+        dxguid
+        d3dcompiler)
 
 add_subdirectory(test/render_hello_world)

@@ -14,14 +14,14 @@ auto create_rhi(Rhi* out_rhi) -> void {
     //     std::abort();
     // }
 
-    if (D3D12GetDebugInterface(IID_PPV_ARGS(&out_rhi->d3d12_debug)) != S_OK) {
+    if (FAILED(D3D12GetDebugInterface(IID_PPV_ARGS(&out_rhi->d3d12_debug)))) {
         std::abort();
     }
 
     out_rhi->d3d12_debug->EnableDebugLayer();
 #endif
 
-    if (CreateDXGIFactory1(IID_PPV_ARGS(&out_rhi->dxgi_factory)) != S_OK) {
+    if (FAILED(CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&out_rhi->dxgi_factory)))) {
         std::abort();
     }
 }
@@ -32,7 +32,7 @@ auto Rhi::enumerate_adapters(Adapter* out_adapters, uint32_t max_adapter_count) 
     DXGI_ADAPTER_DESC1 adapter_desc = {};
 
     while (dxgi_factory->EnumAdapters1(i, &current_adapter) != DXGI_ERROR_NOT_FOUND && i < max_adapter_count) {
-        if (current_adapter->GetDesc1(&adapter_desc) != S_OK) {
+        if (FAILED(current_adapter->GetDesc1(&adapter_desc))) {
             std::abort();
         }
 

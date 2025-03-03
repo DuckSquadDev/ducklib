@@ -5,28 +5,102 @@
 
 namespace ducklib::render {
 enum class QueueType {
-    GRAPHICS,
-    TRANSFER,
-    COMPUTE
+	GRAPHICS,
+	TRANSFER,
+	COMPUTE
+};
+
+enum class HeapType {
+	DEFAULT,
+	UPLOAD
 };
 
 enum class DescriptorType {
-    BUFFER,
-    STORAGE_BUFFER,
-    TEXTURE,
-    STORAGE_IMAGE,
-    SAMPLER
+	BUFFER,
+	STORAGE_BUFFER,
+	TEXTURE,
+	STORAGE_IMAGE,
+	SAMPLER,
+	RENDER_TARGET,
+	DEPTH_STENCIL
 };
 
 #undef DOMAIN
 enum class BindingStage {
-    VERTEX = 1,
-    PIXEL = 2,
-    GEOMETRY = 4,
-    HULL = 8,
-    DOMAIN = 16,
-    COMPUTE = 32,
-    ALL = 255
+	VERTEX = 1,
+	PIXEL = 2,
+	GEOMETRY = 4,
+	HULL = 8,
+	DOMAIN = 16,
+	COMPUTE = 32,
+	ALL = 255
+};
+
+enum class ShaderType {
+	VERTEX,
+	PIXEL,
+	GEOMETRY,
+	HULL,
+	DOMAIN,
+	COMPUTE
+};
+
+enum class ShaderVisibility {
+	ALL,
+	VERTEX,
+	HULl,
+	DOMAIN,
+	GEOMETRY,
+	PIXEL
+};
+
+enum class BindingType {
+	CONSTANT,
+	BUFFER_DESCRIPTOR,
+	SRV_DESCRIPTOR, // TODO: Rename
+	UAV_DESCRIPTOR,
+	DESCRIPTOR_SET
+};
+
+enum class FillMode {
+	SOLID,
+	WIREFRAME
+};
+
+enum class CullMode {
+	BACK,
+	FRONT,
+	NONE
+};
+
+enum class FrontFace {
+	CLOCKWISE,
+	COUNTER_CLOCKWISE
+};
+
+enum class DepthComparison {
+	LTEQ,
+	LT,
+	GTEQ,
+	GT,
+	EQ,
+	NEQ,
+	ALWAYS,
+	NEVER
+};
+
+enum class InputSlotType {
+	PER_VERTEX_DATA,
+	PER_INSTANCE_DATA
+};
+
+enum class PrimitiveTopology
+{
+	UNDEFINED,
+	POINT,
+	LINE,
+	TRIANGLE,
+	PATCH
 };
 
 enum class Format : uint32_t {
@@ -159,6 +233,100 @@ inline auto to_d3d12_queue_type(QueueType type) {
     case QueueType::TRANSFER: return D3D12_COMMAND_LIST_TYPE_COPY;
     default: std::abort();
     }
+}
+
+inline auto to_d3d12_descriptor_type(DescriptorType type) -> D3D12_DESCRIPTOR_HEAP_TYPE {
+	switch (type) {
+	case DescriptorType::BUFFER:
+	case DescriptorType::STORAGE_BUFFER:
+	case DescriptorType::TEXTURE:
+	case DescriptorType::STORAGE_IMAGE: return D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	case DescriptorType::SAMPLER: return D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+	case DescriptorType::RENDER_TARGET: return D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	case DescriptorType::DEPTH_STENCIL: return D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	default: std::abort();
+	}
+}
+
+inline auto to_d3d12_binding_type(BindingType type) -> D3D12_ROOT_PARAMETER_TYPE {
+	switch (type) {
+	case BindingType::CONSTANT: return D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+	case BindingType::BUFFER_DESCRIPTOR: return D3D12_ROOT_PARAMETER_TYPE_CBV;
+	case BindingType::SRV_DESCRIPTOR: return D3D12_ROOT_PARAMETER_TYPE_SRV;
+	case BindingType::UAV_DESCRIPTOR: return D3D12_ROOT_PARAMETER_TYPE_UAV;
+	case BindingType::DESCRIPTOR_SET: return D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	default: std::abort();
+	}
+}
+
+inline auto to_d3d_shader_target(ShaderType type) -> const char* {
+	switch (type) {
+	case ShaderType::VERTEX: return "vs_5_0";
+	case ShaderType::PIXEL: return "ps_5_0";
+	case ShaderType::GEOMETRY: return "gs_5_0";
+	case ShaderType::DOMAIN: return "ds_5_0";
+	case ShaderType::HULL: return "hs_5_0";
+	case ShaderType::COMPUTE: return "cs_5_0";
+	default: std::abort();
+	}
+}
+
+inline auto to_d3d12_fill_mode(FillMode fill_mode) -> D3D12_FILL_MODE {
+	switch (fill_mode) {
+	case FillMode::WIREFRAME: return D3D12_FILL_MODE_WIREFRAME;
+	case FillMode::SOLID: return D3D12_FILL_MODE_SOLID;
+	default: std::abort();
+	}
+}
+
+inline auto to_d3d12_cull_mode(CullMode cull_mode) -> D3D12_CULL_MODE {
+	switch (cull_mode) {
+	case CullMode::NONE: return D3D12_CULL_MODE_NONE;
+	case CullMode::FRONT: return D3D12_CULL_MODE_FRONT;
+	case CullMode::BACK: return D3D12_CULL_MODE_BACK;
+	default: std::abort();
+	}
+}
+
+inline auto to_d3d12_front_face(FrontFace front_face) -> BOOL {
+	switch (front_face) {
+	case FrontFace::CLOCKWISE: return FALSE;
+	case FrontFace::COUNTER_CLOCKWISE: return TRUE;
+	default: std::abort();
+	}
+}
+
+inline auto to_d3d12_depth_comparison(DepthComparison depth_comparison) -> D3D12_COMPARISON_FUNC {
+	switch (depth_comparison) {
+	case DepthComparison::LTEQ: return D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	case DepthComparison::LT: return D3D12_COMPARISON_FUNC_LESS;
+	case DepthComparison::GTEQ: return D3D12_COMPARISON_FUNC_GREATER_EQUAL;
+	case DepthComparison::GT: return D3D12_COMPARISON_FUNC_GREATER;
+	case DepthComparison::EQ: return D3D12_COMPARISON_FUNC_EQUAL;
+	case DepthComparison::NEQ: return D3D12_COMPARISON_FUNC_NOT_EQUAL;
+	case DepthComparison::ALWAYS: return D3D12_COMPARISON_FUNC_ALWAYS;
+	case DepthComparison::NEVER: return D3D12_COMPARISON_FUNC_NEVER;
+	default: std::abort();
+	}
+}
+
+inline auto to_d3d12_input_slot_type(InputSlotType slot_type) -> D3D12_INPUT_CLASSIFICATION {
+	switch (slot_type) {
+	case InputSlotType::PER_VERTEX_DATA: return D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+	case InputSlotType::PER_INSTANCE_DATA: return D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
+	default: std::abort();
+	}
+}
+
+inline auto to_d3d12_primitive_topology(PrimitiveTopology topology) -> D3D12_PRIMITIVE_TOPOLOGY_TYPE {
+	switch (topology) {
+	case PrimitiveTopology::UNDEFINED: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
+	case PrimitiveTopology::POINT: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+	case PrimitiveTopology::LINE: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+	case PrimitiveTopology::TRIANGLE: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	case PrimitiveTopology::PATCH: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
+	default: std::abort();
+	}
 }
 
 static DXGI_FORMAT dxgi_format_map[] = {

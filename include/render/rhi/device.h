@@ -13,15 +13,18 @@ using Microsoft::WRL::ComPtr;
 
 namespace ducklib::render {
 struct Device {
-    ComPtr<ID3D12Device> d3d12_device;
+    ComPtr<ID3D12Device2> d3d12_device;
     
-    auto create_queue(QueueType type, CommandQueue* out_queue) -> void;
-    auto create_command_list(QueueType queue_type, CommandList* out_list) -> void;
+    void create_queue(QueueType type, CommandQueue* out_queue);
+    void create_command_list(QueueType queue_type, CommandList* out_list);
 
-    auto create_vertex_buffer(uint64_t byte_size, VertexBuffer* out_buffer) -> void;
+    // Equivalent to D3D12's root signature
+    void create_binding_set(BindingSetDesc binding_set_desc);
+    void create_pso(BindingSet* binding_set, PsoDesc* pso_desc, Pso* pso_out);
 
-    auto create_descriptor_set_layout(DescriptorSetLayoutItem* layout_items, uint32_t item_count) -> DescriptorSetLayout*;
-    auto create_descriptor_set(DescriptorSetLayout* layout, DescriptorSetItem* descriptors, uint32_t descriptor_count) -> DescriptorSet*;
+    void create_descriptor_heap(DescriptorType type, uint32_t count, DescriptorHeap* out_heap);
+
+    void create_buffer(uint64_t byte_size, Buffer* out_buffer, HeapType heap_type = HeapType::DEFAULT);
 };
 }
 
