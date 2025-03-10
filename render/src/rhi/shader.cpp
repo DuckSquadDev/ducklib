@@ -1,3 +1,5 @@
+#include <filesystem>
+
 #include "render/rhi/shader.h"
 
 namespace ducklib::render {
@@ -6,8 +8,32 @@ void compile_shader(const wchar_t* filename, ShaderType shader_type, const char*
     ID3DBlob* errors;
     const char* shader_target = to_d3d_shader_target(shader_type);
 
-    if (FAILED(
-        D3DCompileFromFile(filename, nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, entry_point, shader_target, 0, 0, &code_blob, &errors))) {
+    auto d = std::filesystem::current_path();
+
+#ifndef NDEBUG
+    auto result = D3DCompileFromFile(
+        filename,
+        nullptr,
+        D3D_COMPILE_STANDARD_FILE_INCLUDE,
+        entry_point,
+        shader_target,
+        D3DCOMPILE_DEBUG,
+        0,
+        &code_blob,
+        &errors);
+#else
+    auto result = D3DCompileFromFile(
+        ilename,
+        nullptr,
+        D3D_COMPILE_STANDARD_FILE_INCLUDE,
+        entry_point,
+        shader_target,
+        0,
+        0,
+        &code_blob,
+        &errors);
+#endif
+        if (FAILED(result)) {
         std::abort();
     }
 
@@ -16,7 +42,7 @@ void compile_shader(const wchar_t* filename, ShaderType shader_type, const char*
 }
 
 auto to_d3d12_bytecode(const Shader* shader) -> D3D12_SHADER_BYTECODE {
-    if (shader->d3d_bytecode_blob) {
+    if (shader && shader->d3d_bytecode_blob) {
         return D3D12_SHADER_BYTECODE{ shader->d3d_bytecode_blob->GetBufferPointer(), shader->d3d_bytecode_blob->GetBufferSize() };
     } else {
         return D3D12_SHADER_BYTECODE{ nullptr, 0 };

@@ -16,48 +16,69 @@ struct Adapter {
 };
 
 struct Buffer {
-    ID3D12Resource1* d3d12_resource;
+    ID3D12Resource1* d3d12_resource = nullptr;
+    uint64_t size;
 };
 
 struct DescriptorHeap {
-    ID3D12DescriptorHeap* d3d12_heap;
+    ID3D12DescriptorHeap* d3d12_heap = nullptr;
+    D3D12_CPU_DESCRIPTOR_HANDLE first_cpu_handle = {};
+    D3D12_GPU_DESCRIPTOR_HANDLE first_gpu_handle = {};
+    uint16_t descriptor_size;
+    DescriptorHeapType type;
+
+    auto cpu_handle(uint64_t index) -> D3D12_CPU_DESCRIPTOR_HANDLE {
+        auto ptr = reinterpret_cast<uint8_t*>(first_cpu_handle.ptr) + index * descriptor_size;
+        return D3D12_CPU_DESCRIPTOR_HANDLE{ reinterpret_cast<SIZE_T>(ptr) };
+    }
+
+    auto gpu_handle(uint64_t index) -> D3D12_GPU_DESCRIPTOR_HANDLE {
+        auto ptr = reinterpret_cast<uint8_t*>(first_gpu_handle.ptr) + index * descriptor_size;
+        return D3D12_GPU_DESCRIPTOR_HANDLE{ reinterpret_cast<SIZE_T>(ptr) };
+    }
 };
 
 struct Shader {
-    ID3DBlob* d3d_bytecode_blob;
+    ID3DBlob* d3d_bytecode_blob = nullptr;
     ShaderType type;
 };
 
-struct BufferDescriptor {
-    uint32_t offset;
-    uint32_t size;
+struct BufferDescriptorDesc {
+    uint32_t offset = 0;
+    uint32_t size = 0;
     uint32_t stride;
-    bool raw;
+    bool raw = false;
 };
 
-struct TextureDescriptor {
-    uint32_t mip_level_count;
-    uint32_t base_mip_level;
-    uint32_t plane_slice;
+struct TextureDescriptorDesc {
+    uint32_t mip_level_count = 0;
+    uint32_t base_mip_level = 0;
+    uint32_t plane_slice = 0;
 };
 
-struct StoreImageDescriptor {
-    uint32_t mip_slice;
-    uint32_t plane_slice;
-    uint32_t base_w_level;
-    uint32_t w_size;
+struct StoreImageDescriptorDesc {
+    uint32_t mip_slice = 0;
+    uint32_t plane_slice = 0;
+    uint32_t base_w_level = 0;
+    uint32_t w_size = 0;
+};
+
+struct DescriptorDesc {
+    void* resource = nullptr;
+    union {
+        BufferDescriptorDesc buffer_desc;
+        TextureDescriptorDesc texture_desc;
+        StoreImageDescriptorDesc storage_image_desc;
+    };
+    uint32_t array_size = 1;
+    uint32_t array_offset = 0;
+    Format format;
+    ResourceType type;
 };
 
 struct Descriptor {
-    void* resource;
-    union {
-        BufferDescriptor buffer_desc;
-        TextureDescriptor texture_desc;
-        StoreImageDescriptor storage_image_desc;
-    };
-    uint32_t array_size;
-    Format format;
-    DescriptorType type;
+    D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle;
+    D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle;
 };
 
 struct DescriptorSet {};
@@ -87,8 +108,9 @@ struct BindingDesc {
         DescriptorBindingDesc descriptor_binding;
         DescriptorSetBindingDesc descriptor_set_binding;
     };
+
     BindingType type;
-    ShaderVisibility shader_visibility;
+    ShaderVisibility shader_visibility = ShaderVisibility::ALL;
 };
 
 struct BindingSetDesc {
@@ -145,7 +167,7 @@ struct PsoDesc {
     uint32_t rt_count;
     Format rt_formats[8];
     Format ds_format;
-    PrimitiveTopology primitive_topology;
+    PrimitiveTopology primitive_topology = PrimitiveTopology::TRIANGLE;
 };
 
 struct Pso {

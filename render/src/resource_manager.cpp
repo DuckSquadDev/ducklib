@@ -5,8 +5,8 @@ CommandList resource_list;
 Buffer upload_buffer;
 
 void setup_management_resources(Device* device) {
-    device->create_command_list(QueueType::GRAPHICS, &resource_list);
-    device->create_buffer(4096, &upload_buffer, HeapType::UPLOAD);
+    device->create_command_list(QueueType::GRAPHICS, resource_list);
+    device->create_buffer(4096, upload_buffer, HeapType::UPLOAD);
 }
 
 auto upload_buffer_data(const Buffer* dest_resource, uint64_t offset, const void* data, uint64_t size) -> uint64_t {
