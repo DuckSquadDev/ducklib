@@ -21,6 +21,7 @@ struct Device {
     void create_descriptor_heap(DescriptorHeapType type, uint32_t count, DescriptorHeap& out_heap);
     void create_cbuffer_descriptor(const Buffer& cbuffer, const Descriptor& descriptor);
     void create_srv_descriptor(const DescriptorDesc& desc, const Descriptor& descriptor);
+    void create_uav_descriptor(const DescriptorDesc& desc, const Descriptor& descriptor);
 
     // Equivalent to D3D12's root signature
     void create_binding_set(const BindingSetDesc& binding_set_desc, BindingSet& out_set);

@@ -253,7 +253,7 @@ inline auto to_d3d12_binding_type(BindingType type) -> D3D12_ROOT_PARAMETER_TYPE
     }
 }
 
-inline auto to_d3d12_view_dimension(ResourceType type, uint32_t array_size) -> D3D12_SRV_DIMENSION {
+inline auto to_d3d12_srv_dimension(ResourceType type, uint32_t array_size) -> D3D12_SRV_DIMENSION {
     switch (type) {
     case ResourceType::BUFFER: return D3D12_SRV_DIMENSION_BUFFER;
     case ResourceType::TEXTURE_1D:
@@ -275,6 +275,26 @@ inline auto to_d3d12_view_dimension(ResourceType type, uint32_t array_size) -> D
         } else {
             return D3D12_SRV_DIMENSION_TEXTURECUBE;
         }
+    default: std::abort();
+    }
+}
+
+inline auto to_d3d12_uav_dimension(ResourceType type, uint32_t array_size) -> D3D12_UAV_DIMENSION {
+    switch (type) {
+    case ResourceType::BUFFER: return D3D12_UAV_DIMENSION_BUFFER;
+    case ResourceType::TEXTURE_1D:
+        if (array_size > 1) {
+            return D3D12_UAV_DIMENSION_TEXTURE1DARRAY;
+        } else {
+            return D3D12_UAV_DIMENSION_TEXTURE1D;
+        }
+    case ResourceType::TEXTURE_2D:
+        if (array_size > 1) {
+            return D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+        } else {
+            return D3D12_UAV_DIMENSION_TEXTURE2D;
+        }
+    case ResourceType::TEXTURE_3D: return D3D12_UAV_DIMENSION_TEXTURE3D;
     default: std::abort();
     }
 }

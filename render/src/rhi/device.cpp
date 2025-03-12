@@ -61,57 +61,57 @@ void Device::create_cbuffer_descriptor(const Buffer& cbuffer, const Descriptor& 
 
 void Device::create_srv_descriptor(const DescriptorDesc& desc, const Descriptor& descriptor) {
     D3D12_SHADER_RESOURCE_VIEW_DESC d3d12_desc = {};
-    auto d3d12_type = to_d3d12_view_dimension(desc.type, desc.array_size);
+    auto d3d12_type = to_d3d12_srv_dimension(desc.type, desc.array_size);
 
     d3d12_desc.Format = to_d3d12_format(desc.format);
     d3d12_desc.ViewDimension = d3d12_type;
 
     switch (d3d12_type) {
     case D3D12_SRV_DIMENSION_BUFFER:
-        d3d12_desc.Buffer.FirstElement = desc.buffer_desc.offset;
-        d3d12_desc.Buffer.NumElements = desc.buffer_desc.size;
-        d3d12_desc.Buffer.StructureByteStride = desc.buffer_desc.stride;
-        d3d12_desc.Buffer.Flags = desc.buffer_desc.raw ? D3D12_BUFFER_SRV_FLAG_RAW : D3D12_BUFFER_SRV_FLAG_NONE;
+        d3d12_desc.Buffer.FirstElement = desc.buffer.offset;
+        d3d12_desc.Buffer.NumElements = desc.buffer.size;
+        d3d12_desc.Buffer.StructureByteStride = desc.buffer.stride;
+        d3d12_desc.Buffer.Flags = desc.buffer.raw ? D3D12_BUFFER_SRV_FLAG_RAW : D3D12_BUFFER_SRV_FLAG_NONE;
         break;
     case D3D12_SRV_DIMENSION_TEXTURE1D:
-        d3d12_desc.Texture1D.MipLevels = desc.texture_desc.mip_level_count;
-        d3d12_desc.Texture1D.MostDetailedMip = desc.texture_desc.base_mip_level;
+        d3d12_desc.Texture1D.MipLevels = desc.texture.mip_level_count;
+        d3d12_desc.Texture1D.MostDetailedMip = desc.texture.base_mip_level;
         d3d12_desc.Texture1D.ResourceMinLODClamp = 0.0f;
         break;
     case D3D12_SRV_DIMENSION_TEXTURE1DARRAY:
-        d3d12_desc.Texture1DArray.MipLevels = desc.texture_desc.mip_level_count;
-        d3d12_desc.Texture1DArray.MostDetailedMip = desc.texture_desc.base_mip_level;
+        d3d12_desc.Texture1DArray.MipLevels = desc.texture.mip_level_count;
+        d3d12_desc.Texture1DArray.MostDetailedMip = desc.texture.base_mip_level;
         d3d12_desc.Texture1DArray.ResourceMinLODClamp = 0.0f;
         d3d12_desc.Texture1DArray.ArraySize = desc.array_size;
         d3d12_desc.Texture1DArray.FirstArraySlice = desc.array_offset;
         break;
     case D3D12_SRV_DIMENSION_TEXTURE2D:
-        d3d12_desc.Texture2D.MipLevels = desc.texture_desc.mip_level_count;
-        d3d12_desc.Texture2D.MostDetailedMip = desc.texture_desc.base_mip_level;
+        d3d12_desc.Texture2D.MipLevels = desc.texture.mip_level_count;
+        d3d12_desc.Texture2D.MostDetailedMip = desc.texture.base_mip_level;
         d3d12_desc.Texture2D.ResourceMinLODClamp = 0.0f;
-        d3d12_desc.Texture2D.PlaneSlice = desc.texture_desc.plane_slice;
+        d3d12_desc.Texture2D.PlaneSlice = desc.texture.plane_slice;
         break;
     case D3D12_SRV_DIMENSION_TEXTURE2DARRAY:
-        d3d12_desc.Texture2DArray.MipLevels = desc.texture_desc.mip_level_count;
-        d3d12_desc.Texture2DArray.MostDetailedMip = desc.texture_desc.base_mip_level;
+        d3d12_desc.Texture2DArray.MipLevels = desc.texture.mip_level_count;
+        d3d12_desc.Texture2DArray.MostDetailedMip = desc.texture.base_mip_level;
         d3d12_desc.Texture2DArray.ResourceMinLODClamp = 0.0f;
-        d3d12_desc.Texture2DArray.PlaneSlice = desc.texture_desc.plane_slice;
+        d3d12_desc.Texture2DArray.PlaneSlice = desc.texture.plane_slice;
         d3d12_desc.Texture2DArray.ArraySize = desc.array_size;
         d3d12_desc.Texture2DArray.FirstArraySlice = desc.array_offset;
         break;
     case D3D12_SRV_DIMENSION_TEXTURE3D:
-        d3d12_desc.Texture3D.MipLevels = desc.texture_desc.mip_level_count;
-        d3d12_desc.Texture3D.MostDetailedMip = desc.texture_desc.base_mip_level;
+        d3d12_desc.Texture3D.MipLevels = desc.texture.mip_level_count;
+        d3d12_desc.Texture3D.MostDetailedMip = desc.texture.base_mip_level;
         d3d12_desc.Texture3D.ResourceMinLODClamp = 0.0f;
         break;
     case D3D12_SRV_DIMENSION_TEXTURECUBE:
-        d3d12_desc.TextureCube.MipLevels = desc.texture_desc.mip_level_count;
-        d3d12_desc.TextureCube.MostDetailedMip = desc.texture_desc.base_mip_level;
+        d3d12_desc.TextureCube.MipLevels = desc.texture.mip_level_count;
+        d3d12_desc.TextureCube.MostDetailedMip = desc.texture.base_mip_level;
         d3d12_desc.TextureCube.ResourceMinLODClamp = 0.0f;
         break;
     case D3D12_SRV_DIMENSION_TEXTURECUBEARRAY:
-        d3d12_desc.TextureCubeArray.MipLevels = desc.texture_desc.mip_level_count;
-        d3d12_desc.TextureCubeArray.MostDetailedMip = desc.texture_desc.base_mip_level;
+        d3d12_desc.TextureCubeArray.MipLevels = desc.texture.mip_level_count;
+        d3d12_desc.TextureCubeArray.MostDetailedMip = desc.texture.base_mip_level;
         d3d12_desc.TextureCubeArray.ResourceMinLODClamp = 0.0f;
         d3d12_desc.TextureCubeArray.NumCubes = desc.array_size;
         d3d12_desc.TextureCubeArray.First2DArrayFace = desc.array_offset;
@@ -120,6 +120,50 @@ void Device::create_srv_descriptor(const DescriptorDesc& desc, const Descriptor&
     }
     
     d3d12_device->CreateShaderResourceView(static_cast<ID3D12Resource*>(desc.resource), &d3d12_desc, descriptor.cpu_handle);
+}
+
+void Device::create_uav_descriptor(const DescriptorDesc& desc, const Descriptor& descriptor) {
+    D3D12_UNORDERED_ACCESS_VIEW_DESC d3d12_desc = {};
+    auto d3d12_type = to_d3d12_uav_dimension(desc.type, desc.array_size);
+
+    d3d12_desc.Format = to_d3d12_format(desc.format);
+    d3d12_desc.ViewDimension = d3d12_type;
+
+    switch (d3d12_type) {
+    case D3D12_UAV_DIMENSION_BUFFER:
+        d3d12_desc.Buffer.FirstElement = desc.buffer.offset;
+        d3d12_desc.Buffer.NumElements = desc.buffer.size;
+        d3d12_desc.Buffer.StructureByteStride = desc.buffer.stride;
+        d3d12_desc.Buffer.CounterOffsetInBytes = 0;
+        d3d12_desc.Buffer.Flags = desc.buffer.raw ? D3D12_BUFFER_UAV_FLAG_RAW : D3D12_BUFFER_UAV_FLAG_NONE;
+        break;
+    case D3D12_UAV_DIMENSION_TEXTURE1D:
+        d3d12_desc.Texture1D.MipSlice = desc.storage_image.mip_slice;
+        break;
+    case D3D12_UAV_DIMENSION_TEXTURE1DARRAY:
+        d3d12_desc.Texture1DArray.MipSlice = desc.storage_image.mip_slice;
+        d3d12_desc.Texture1DArray.ArraySize = desc.array_size;
+        d3d12_desc.Texture1DArray.FirstArraySlice = desc.array_offset;
+        break;
+    case D3D12_UAV_DIMENSION_TEXTURE2D:
+        d3d12_desc.Texture2D.MipSlice = desc.storage_image.mip_slice;
+        d3d12_desc.Texture2D.PlaneSlice = desc.storage_image.plane_slice;
+        break;
+    case D3D12_UAV_DIMENSION_TEXTURE2DARRAY:
+        d3d12_desc.Texture2DArray.MipSlice = desc.storage_image.mip_slice;
+        d3d12_desc.Texture2DArray.PlaneSlice = desc.storage_image.plane_slice;
+        d3d12_desc.Texture2DArray.ArraySize = desc.array_size;
+        d3d12_desc.Texture2DArray.FirstArraySlice = desc.array_offset;
+        break;
+    case D3D12_UAV_DIMENSION_TEXTURE3D:
+        d3d12_desc.Texture3D.MipSlice = desc.storage_image.mip_slice;
+        d3d12_desc.Texture3D.FirstWSlice = desc.storage_image.base_w_level;
+        d3d12_desc.Texture3D.WSize = desc.storage_image.w_size;
+        break;
+    default: std::abort();
+    }
+
+    d3d12_device->CreateUnorderedAccessView(static_cast<ID3D12Resource*>(desc.resource), nullptr, &d3d12_desc, descriptor.cpu_handle);
 }
 
 void Device::create_binding_set(const BindingSetDesc& binding_set_desc, BindingSet& out_set) {
@@ -208,7 +252,7 @@ void Device::create_pso(const BindingSet& binding_set, const PsoDesc& pso_desc, 
     d3d12_pso_desc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 
     for (uint32_t i = 0; i < pso_desc.input_layout.element_count; ++i) {
-        InputLayoutItem& input_element = pso_desc.input_layout.elements[i];
+        const InputLayoutItem& input_element = pso_desc.input_layout.elements[i];
         d3d12_input_elements[i].SemanticName = input_element.semantic_name;
         d3d12_input_elements[i].SemanticIndex = input_element.semantic_index;
         d3d12_input_elements[i].InputSlot = input_element.input_slot;

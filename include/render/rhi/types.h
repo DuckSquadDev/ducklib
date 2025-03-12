@@ -66,9 +66,9 @@ struct StoreImageDescriptorDesc {
 struct DescriptorDesc {
     void* resource = nullptr;
     union {
-        BufferDescriptorDesc buffer_desc;
-        TextureDescriptorDesc texture_desc;
-        StoreImageDescriptorDesc storage_image_desc;
+        BufferDescriptorDesc buffer;
+        TextureDescriptorDesc texture;
+        StoreImageDescriptorDesc storage_image;
     };
     uint32_t array_size = 1;
     uint32_t array_offset = 0;

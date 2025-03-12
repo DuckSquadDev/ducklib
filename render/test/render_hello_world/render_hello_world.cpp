@@ -34,13 +34,10 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     device.create_queue(render::QueueType::GRAPHICS, queue);
     device.create_command_list(render::QueueType::GRAPHICS, command_list);
     device.create_descriptor_heap(render::DescriptorHeapType::CBV_SRV_UAV, 128, descriptor_heap);
-    uint64_t descriptor_size = device.d3d12_device->GetDescriptorHandleIncrementSize(
-        to_d3d12_descriptor_heap_type(render::DescriptorHeapType::CBV_SRV_UAV));
 
     device.create_buffer(256, v_buffer, render::HeapType::UPLOAD);
     float triangle_points[3][3] = { { -1.0f, 0.0f, 0.0f }, { 0.0f, 2.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } };
     upload_buffer_data(&v_buffer, 0, triangle_points, sizeof(triangle_points));
-    device.create_buffer_descriptor();
 
     device.create_buffer(256, c_buffer, render::HeapType::UPLOAD);
     float view_matrix[4][4] = {
@@ -57,6 +54,7 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     };
     upload_buffer_data(&c_buffer, 0, view_matrix, sizeof(view_matrix));
     upload_buffer_data(&c_buffer, sizeof(view_matrix), perspective_matrix, sizeof(view_matrix));
+    cb_descriptor = { .cpu_handle = descriptor_heap.cpu_handle(0), .gpu_handle = descriptor_heap.gpu_handle(0) };
     device.create_cbuffer_descriptor(c_buffer, cb_descriptor);
 
     binding_set_desc.binding_count = 1;
@@ -68,6 +66,9 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     compile_shader(L"../render/test/render_hello_world/shaders.hlsl", render::ShaderType::VERTEX, "vs_main", &vertex_shader);
     compile_shader(L"../render/test/render_hello_world/shaders.hlsl", render::ShaderType::PIXEL, "ps_main", &pixel_shader);
 
+    pso_desc.input_layout.element_count = 1;
+    pso_desc.input_layout.elements[0].format = render::Format::R32G32B32_FLOAT;
+    pso_desc.input_layout.elements[0].semantic_name = "POSITION";
     pso_desc.vertex_shader = &vertex_shader;
     pso_desc.pixel_shader = &pixel_shader;
     pso_desc.rt_count = 1;
