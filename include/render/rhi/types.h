@@ -3,6 +3,8 @@
 
 #include <wrl/client.h>
 #include <dxgi1_4.h>
+
+#include "command_list.h"
 #include "../lib/d3dx12.h"
 
 #include "constants.h"
@@ -64,7 +66,6 @@ struct StoreImageDescriptorDesc {
 };
 
 struct DescriptorDesc {
-    void* resource = nullptr;
     union {
         BufferDescriptorDesc buffer;
         TextureDescriptorDesc texture;
@@ -171,7 +172,46 @@ struct PsoDesc {
 };
 
 struct Pso {
-    ID3D12PipelineState* d3d12_pso;
+    ID3D12PipelineState* d3d12_pso = nullptr;
+};
+
+struct SwapChain {
+    IDXGISwapChain1* d3d12_swap_chain = nullptr;
+
+    void present();
+};
+
+struct Fence {
+    ID3D12Fence1* d3d12_fence = nullptr;
+    HANDLE event_handle = {};
+
+    void set_completion_value(uint64_t value);
+    void wait();
+};
+
+struct CommandList {
+    ID3D12CommandAllocator* d3d12_alloc = nullptr;
+    ID3D12GraphicsCommandList2* d3d12_list = nullptr;
+    QueueType type;
+
+    void close();
+    void reset();
+
+    void set_pso(const Pso& pso);
+    void draw(uint32_t vertex_count, uint32_t offset);
+
+    void set_rt(const Descriptor& rt_descriptor);
+    void clear_rt(const Descriptor& rt_descriptor, const float color[4]);
+
+    void resource_barrier(void* d3d12_resource, ResourceState start_state, ResourceState end_state);
+};
+
+struct CommandQueue {
+    QueueType type;
+    ComPtr<ID3D12CommandQueue> d3d12_queue;
+
+    void signal(const Fence& fence, uint64_t value);
+    void execute(const CommandList& list);
 };
 }
 

@@ -30,7 +30,16 @@ void Device::create_command_list(QueueType queue_type, CommandList& out_list) {
     if (FAILED(d3d12_device->CreateCommandList(0, d3d12_type, out_list.d3d12_alloc, nullptr, IID_PPV_ARGS(&out_list.d3d12_list)))) {
         throw std::runtime_error("failed to create D3D12 command list");
     }
+
+    out_list.close();
 }
+
+void Device::create_fence(uint64_t initial_value, Fence& out_fence) {
+    if (FAILED(d3d12_device->CreateFence(initial_value, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&out_fence.d3d12_fence)))) {
+        std::abort();
+    }
+}
+
 
 void Device::create_descriptor_heap(DescriptorHeapType type, uint32_t count, DescriptorHeap& out_heap) {
     D3D12_DESCRIPTOR_HEAP_DESC heap_desc = {};
@@ -38,7 +47,7 @@ void Device::create_descriptor_heap(DescriptorHeapType type, uint32_t count, Des
 
     heap_desc.Type = d3d12_heap_type;
     heap_desc.NumDescriptors = count;
-    heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    heap_desc.Flags = type != DescriptorHeapType::RT ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     
     if (FAILED(d3d12_device->CreateDescriptorHeap(&heap_desc, IID_PPV_ARGS(&out_heap.d3d12_heap)))) {
         std::abort();
@@ -59,111 +68,167 @@ void Device::create_cbuffer_descriptor(const Buffer& cbuffer, const Descriptor& 
     d3d12_device->CreateConstantBufferView(&cbuffer_desc, descriptor.cpu_handle);
 }
 
-void Device::create_srv_descriptor(const DescriptorDesc& desc, const Descriptor& descriptor) {
+void Device::create_srv_descriptor(void* resource, const DescriptorDesc* desc, const Descriptor& descriptor) {
+    if (desc == nullptr) {
+        d3d12_device->CreateShaderResourceView(static_cast<ID3D12Resource*>(resource), nullptr, descriptor.cpu_handle);
+        return;
+    }
+    
     D3D12_SHADER_RESOURCE_VIEW_DESC d3d12_desc = {};
-    auto d3d12_type = to_d3d12_srv_dimension(desc.type, desc.array_size);
+    auto d3d12_type = to_d3d12_srv_dimension(desc->type, desc->array_size);
 
-    d3d12_desc.Format = to_d3d12_format(desc.format);
+    d3d12_desc.Format = to_d3d12_format(desc->format);
     d3d12_desc.ViewDimension = d3d12_type;
 
     switch (d3d12_type) {
     case D3D12_SRV_DIMENSION_BUFFER:
-        d3d12_desc.Buffer.FirstElement = desc.buffer.offset;
-        d3d12_desc.Buffer.NumElements = desc.buffer.size;
-        d3d12_desc.Buffer.StructureByteStride = desc.buffer.stride;
-        d3d12_desc.Buffer.Flags = desc.buffer.raw ? D3D12_BUFFER_SRV_FLAG_RAW : D3D12_BUFFER_SRV_FLAG_NONE;
+        d3d12_desc.Buffer.FirstElement = desc->buffer.offset;
+        d3d12_desc.Buffer.NumElements = desc->buffer.size;
+        d3d12_desc.Buffer.StructureByteStride = desc->buffer.stride;
+        d3d12_desc.Buffer.Flags = desc->buffer.raw ? D3D12_BUFFER_SRV_FLAG_RAW : D3D12_BUFFER_SRV_FLAG_NONE;
         break;
     case D3D12_SRV_DIMENSION_TEXTURE1D:
-        d3d12_desc.Texture1D.MipLevels = desc.texture.mip_level_count;
-        d3d12_desc.Texture1D.MostDetailedMip = desc.texture.base_mip_level;
+        d3d12_desc.Texture1D.MipLevels = desc->texture.mip_level_count;
+        d3d12_desc.Texture1D.MostDetailedMip = desc->texture.base_mip_level;
         d3d12_desc.Texture1D.ResourceMinLODClamp = 0.0f;
         break;
     case D3D12_SRV_DIMENSION_TEXTURE1DARRAY:
-        d3d12_desc.Texture1DArray.MipLevels = desc.texture.mip_level_count;
-        d3d12_desc.Texture1DArray.MostDetailedMip = desc.texture.base_mip_level;
+        d3d12_desc.Texture1DArray.MipLevels = desc->texture.mip_level_count;
+        d3d12_desc.Texture1DArray.MostDetailedMip = desc->texture.base_mip_level;
         d3d12_desc.Texture1DArray.ResourceMinLODClamp = 0.0f;
-        d3d12_desc.Texture1DArray.ArraySize = desc.array_size;
-        d3d12_desc.Texture1DArray.FirstArraySlice = desc.array_offset;
+        d3d12_desc.Texture1DArray.ArraySize = desc->array_size;
+        d3d12_desc.Texture1DArray.FirstArraySlice = desc->array_offset;
         break;
     case D3D12_SRV_DIMENSION_TEXTURE2D:
-        d3d12_desc.Texture2D.MipLevels = desc.texture.mip_level_count;
-        d3d12_desc.Texture2D.MostDetailedMip = desc.texture.base_mip_level;
+        d3d12_desc.Texture2D.MipLevels = desc->texture.mip_level_count;
+        d3d12_desc.Texture2D.MostDetailedMip = desc->texture.base_mip_level;
         d3d12_desc.Texture2D.ResourceMinLODClamp = 0.0f;
-        d3d12_desc.Texture2D.PlaneSlice = desc.texture.plane_slice;
+        d3d12_desc.Texture2D.PlaneSlice = desc->texture.plane_slice;
         break;
     case D3D12_SRV_DIMENSION_TEXTURE2DARRAY:
-        d3d12_desc.Texture2DArray.MipLevels = desc.texture.mip_level_count;
-        d3d12_desc.Texture2DArray.MostDetailedMip = desc.texture.base_mip_level;
+        d3d12_desc.Texture2DArray.MipLevels = desc->texture.mip_level_count;
+        d3d12_desc.Texture2DArray.MostDetailedMip = desc->texture.base_mip_level;
         d3d12_desc.Texture2DArray.ResourceMinLODClamp = 0.0f;
-        d3d12_desc.Texture2DArray.PlaneSlice = desc.texture.plane_slice;
-        d3d12_desc.Texture2DArray.ArraySize = desc.array_size;
-        d3d12_desc.Texture2DArray.FirstArraySlice = desc.array_offset;
+        d3d12_desc.Texture2DArray.PlaneSlice = desc->texture.plane_slice;
+        d3d12_desc.Texture2DArray.ArraySize = desc->array_size;
+        d3d12_desc.Texture2DArray.FirstArraySlice = desc->array_offset;
         break;
     case D3D12_SRV_DIMENSION_TEXTURE3D:
-        d3d12_desc.Texture3D.MipLevels = desc.texture.mip_level_count;
-        d3d12_desc.Texture3D.MostDetailedMip = desc.texture.base_mip_level;
+        d3d12_desc.Texture3D.MipLevels = desc->texture.mip_level_count;
+        d3d12_desc.Texture3D.MostDetailedMip = desc->texture.base_mip_level;
         d3d12_desc.Texture3D.ResourceMinLODClamp = 0.0f;
         break;
     case D3D12_SRV_DIMENSION_TEXTURECUBE:
-        d3d12_desc.TextureCube.MipLevels = desc.texture.mip_level_count;
-        d3d12_desc.TextureCube.MostDetailedMip = desc.texture.base_mip_level;
+        d3d12_desc.TextureCube.MipLevels = desc->texture.mip_level_count;
+        d3d12_desc.TextureCube.MostDetailedMip = desc->texture.base_mip_level;
         d3d12_desc.TextureCube.ResourceMinLODClamp = 0.0f;
         break;
     case D3D12_SRV_DIMENSION_TEXTURECUBEARRAY:
-        d3d12_desc.TextureCubeArray.MipLevels = desc.texture.mip_level_count;
-        d3d12_desc.TextureCubeArray.MostDetailedMip = desc.texture.base_mip_level;
+        d3d12_desc.TextureCubeArray.MipLevels = desc->texture.mip_level_count;
+        d3d12_desc.TextureCubeArray.MostDetailedMip = desc->texture.base_mip_level;
         d3d12_desc.TextureCubeArray.ResourceMinLODClamp = 0.0f;
-        d3d12_desc.TextureCubeArray.NumCubes = desc.array_size;
-        d3d12_desc.TextureCubeArray.First2DArrayFace = desc.array_offset;
+        d3d12_desc.TextureCubeArray.NumCubes = desc->array_size;
+        d3d12_desc.TextureCubeArray.First2DArrayFace = desc->array_offset;
         break;
     default: std::abort();
     }
     
-    d3d12_device->CreateShaderResourceView(static_cast<ID3D12Resource*>(desc.resource), &d3d12_desc, descriptor.cpu_handle);
+    d3d12_device->CreateShaderResourceView(static_cast<ID3D12Resource*>(resource), &d3d12_desc, descriptor.cpu_handle);
 }
 
-void Device::create_uav_descriptor(const DescriptorDesc& desc, const Descriptor& descriptor) {
+void Device::create_uav_descriptor(void* resource, const DescriptorDesc* desc, const Descriptor& descriptor) {
+    if (desc == nullptr) {
+        d3d12_device->CreateUnorderedAccessView(static_cast<ID3D12Resource*>(resource), nullptr, nullptr, descriptor.cpu_handle);
+        return;
+    }
+    
     D3D12_UNORDERED_ACCESS_VIEW_DESC d3d12_desc = {};
-    auto d3d12_type = to_d3d12_uav_dimension(desc.type, desc.array_size);
+    auto d3d12_type = to_d3d12_uav_dimension(desc->type, desc->array_size);
 
-    d3d12_desc.Format = to_d3d12_format(desc.format);
+    d3d12_desc.Format = to_d3d12_format(desc->format);
     d3d12_desc.ViewDimension = d3d12_type;
 
     switch (d3d12_type) {
     case D3D12_UAV_DIMENSION_BUFFER:
-        d3d12_desc.Buffer.FirstElement = desc.buffer.offset;
-        d3d12_desc.Buffer.NumElements = desc.buffer.size;
-        d3d12_desc.Buffer.StructureByteStride = desc.buffer.stride;
+        d3d12_desc.Buffer.FirstElement = desc->buffer.offset;
+        d3d12_desc.Buffer.NumElements = desc->buffer.size;
+        d3d12_desc.Buffer.StructureByteStride = desc->buffer.stride;
         d3d12_desc.Buffer.CounterOffsetInBytes = 0;
-        d3d12_desc.Buffer.Flags = desc.buffer.raw ? D3D12_BUFFER_UAV_FLAG_RAW : D3D12_BUFFER_UAV_FLAG_NONE;
+        d3d12_desc.Buffer.Flags = desc->buffer.raw ? D3D12_BUFFER_UAV_FLAG_RAW : D3D12_BUFFER_UAV_FLAG_NONE;
         break;
     case D3D12_UAV_DIMENSION_TEXTURE1D:
-        d3d12_desc.Texture1D.MipSlice = desc.storage_image.mip_slice;
+        d3d12_desc.Texture1D.MipSlice = desc->storage_image.mip_slice;
         break;
     case D3D12_UAV_DIMENSION_TEXTURE1DARRAY:
-        d3d12_desc.Texture1DArray.MipSlice = desc.storage_image.mip_slice;
-        d3d12_desc.Texture1DArray.ArraySize = desc.array_size;
-        d3d12_desc.Texture1DArray.FirstArraySlice = desc.array_offset;
+        d3d12_desc.Texture1DArray.MipSlice = desc->storage_image.mip_slice;
+        d3d12_desc.Texture1DArray.ArraySize = desc->array_size;
+        d3d12_desc.Texture1DArray.FirstArraySlice = desc->array_offset;
         break;
     case D3D12_UAV_DIMENSION_TEXTURE2D:
-        d3d12_desc.Texture2D.MipSlice = desc.storage_image.mip_slice;
-        d3d12_desc.Texture2D.PlaneSlice = desc.storage_image.plane_slice;
+        d3d12_desc.Texture2D.MipSlice = desc->storage_image.mip_slice;
+        d3d12_desc.Texture2D.PlaneSlice = desc->storage_image.plane_slice;
         break;
     case D3D12_UAV_DIMENSION_TEXTURE2DARRAY:
-        d3d12_desc.Texture2DArray.MipSlice = desc.storage_image.mip_slice;
-        d3d12_desc.Texture2DArray.PlaneSlice = desc.storage_image.plane_slice;
-        d3d12_desc.Texture2DArray.ArraySize = desc.array_size;
-        d3d12_desc.Texture2DArray.FirstArraySlice = desc.array_offset;
+        d3d12_desc.Texture2DArray.MipSlice = desc->storage_image.mip_slice;
+        d3d12_desc.Texture2DArray.PlaneSlice = desc->storage_image.plane_slice;
+        d3d12_desc.Texture2DArray.ArraySize = desc->array_size;
+        d3d12_desc.Texture2DArray.FirstArraySlice = desc->array_offset;
         break;
     case D3D12_UAV_DIMENSION_TEXTURE3D:
-        d3d12_desc.Texture3D.MipSlice = desc.storage_image.mip_slice;
-        d3d12_desc.Texture3D.FirstWSlice = desc.storage_image.base_w_level;
-        d3d12_desc.Texture3D.WSize = desc.storage_image.w_size;
+        d3d12_desc.Texture3D.MipSlice = desc->storage_image.mip_slice;
+        d3d12_desc.Texture3D.FirstWSlice = desc->storage_image.base_w_level;
+        d3d12_desc.Texture3D.WSize = desc->storage_image.w_size;
         break;
     default: std::abort();
     }
 
-    d3d12_device->CreateUnorderedAccessView(static_cast<ID3D12Resource*>(desc.resource), nullptr, &d3d12_desc, descriptor.cpu_handle);
+    d3d12_device->CreateUnorderedAccessView(static_cast<ID3D12Resource*>(resource), nullptr, &d3d12_desc, descriptor.cpu_handle);
+}
+
+void Device::create_rt_descriptor(void* resource, const DescriptorDesc* desc, const Descriptor& descriptor) {
+    if (desc == nullptr) {
+        d3d12_device->CreateRenderTargetView(static_cast<ID3D12Resource*>(resource), nullptr, descriptor.cpu_handle);
+        return;
+    }
+    
+    D3D12_RENDER_TARGET_VIEW_DESC d3d12_desc = {};
+    auto d3d12_type = to_d3d12_rtv_dimension(desc->type, desc->array_size);
+
+    d3d12_desc.Format = to_d3d12_format(desc->format);
+    d3d12_desc.ViewDimension = d3d12_type;
+
+    switch (d3d12_type) {
+    case D3D12_RTV_DIMENSION_BUFFER:
+        d3d12_desc.Buffer.FirstElement = desc->buffer.offset;
+        d3d12_desc.Buffer.NumElements = desc->buffer.size;
+        break;
+    case D3D12_RTV_DIMENSION_TEXTURE1D:
+        d3d12_desc.Texture1D.MipSlice = desc->storage_image.mip_slice;
+        break;
+    case D3D12_RTV_DIMENSION_TEXTURE1DARRAY:
+        d3d12_desc.Texture1DArray.MipSlice = desc->storage_image.mip_slice;
+        d3d12_desc.Texture1DArray.ArraySize = desc->array_size;
+        d3d12_desc.Texture1DArray.FirstArraySlice = desc->array_offset;
+        break;
+    case D3D12_RTV_DIMENSION_TEXTURE2D:
+        d3d12_desc.Texture2D.MipSlice = desc->storage_image.mip_slice;
+        d3d12_desc.Texture2D.PlaneSlice = desc->storage_image.plane_slice;
+        break;
+    case D3D12_RTV_DIMENSION_TEXTURE2DARRAY:
+        d3d12_desc.Texture2DArray.MipSlice = desc->storage_image.mip_slice;
+        d3d12_desc.Texture2DArray.PlaneSlice = desc->storage_image.plane_slice;
+        d3d12_desc.Texture2DArray.ArraySize = desc->array_size;
+        d3d12_desc.Texture2DArray.FirstArraySlice = desc->array_offset;
+        break;
+    case D3D12_RTV_DIMENSION_TEXTURE3D:
+        d3d12_desc.Texture3D.MipSlice = desc->storage_image.mip_slice;
+        d3d12_desc.Texture3D.FirstWSlice = desc->storage_image.base_w_level;
+        d3d12_desc.Texture3D.WSize = desc->storage_image.w_size;
+        break;
+    default: std::abort();
+    }
+
+    d3d12_device->CreateRenderTargetView(static_cast<ID3D12Resource*>(resource), &d3d12_desc, descriptor.cpu_handle);
 }
 
 void Device::create_binding_set(const BindingSetDesc& binding_set_desc, BindingSet& out_set) {

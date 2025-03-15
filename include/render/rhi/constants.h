@@ -107,6 +107,11 @@ enum class PrimitiveTopology {
     PATCH
 };
 
+enum class ResourceState {
+    PRESENT,
+    RENDER_TARGET
+};
+
 enum class Format : uint32_t {
     UNKNOWN = 0,
     R32G32B32A32_TYPELESS,
@@ -299,6 +304,26 @@ inline auto to_d3d12_uav_dimension(ResourceType type, uint32_t array_size) -> D3
     }
 }
 
+inline auto to_d3d12_rtv_dimension(ResourceType type, uint32_t array_size) -> D3D12_RTV_DIMENSION {
+    switch (type) {
+    case ResourceType::BUFFER: return D3D12_RTV_DIMENSION_BUFFER;
+    case ResourceType::TEXTURE_1D:
+        if (array_size > 1) {
+            return D3D12_RTV_DIMENSION_TEXTURE1DARRAY;
+        } else {
+            return D3D12_RTV_DIMENSION_TEXTURE1D;
+        }
+    case ResourceType::TEXTURE_2D:
+        if (array_size > 1) {
+            return D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
+        } else {
+            return D3D12_RTV_DIMENSION_TEXTURE2D;
+        }
+    case ResourceType::TEXTURE_3D: return D3D12_RTV_DIMENSION_TEXTURE3D;
+    default: std::abort();
+    }
+}
+
 inline auto to_d3d_shader_target(ShaderType type) -> const char* {
     switch (type) {
     case ShaderType::VERTEX: return "vs_5_0";
@@ -365,6 +390,14 @@ inline auto to_d3d12_primitive_topology(PrimitiveTopology topology) -> D3D12_PRI
     case PrimitiveTopology::LINE: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
     case PrimitiveTopology::TRIANGLE: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     case PrimitiveTopology::PATCH: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
+    default: std::abort();
+    }
+}
+
+inline auto to_d3d12_resource_state(ResourceState state) -> D3D12_RESOURCE_STATES {
+    switch (state) {
+    case ResourceState::PRESENT: return D3D12_RESOURCE_STATE_PRESENT;
+    case ResourceState::RENDER_TARGET: return D3D12_RESOURCE_STATE_RENDER_TARGET;
     default: std::abort();
     }
 }

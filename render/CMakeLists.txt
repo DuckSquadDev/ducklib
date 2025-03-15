@@ -17,11 +17,8 @@ add_library(${PROJECT_NAME} STATIC
         ../include/render/rhi/constants.h
         ../include/render/rhi/resources/swap_chain.h
         ../include/render/rhi/resources/descriptor_set.h
-        ../include/render/rhi/command_queue.h
         ../include/render/rhi/command_list.h
-        src/rhi/command_queue.cpp
         ../include/render/rhi/types.h
-        src/rhi/command_list.cpp
         ../include/render/resource_manager.h
         src/resource_manager.cpp
         ../include/render/rhi/shader.h
