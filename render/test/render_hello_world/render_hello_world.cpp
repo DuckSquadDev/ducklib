@@ -1,6 +1,7 @@
 #include <cassert>
 #include <Windows.h>
 #include <memory>
+#include <thread>
 
 #include "core/win/win_app_window.h"
 #include "render/resource_manager.h"
@@ -9,6 +10,11 @@
 #include "render/rhi/shader.h"
 
 using namespace ducklib;
+
+struct Vertex {
+    float pos[3];
+    float color[4];
+};
 
 int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char* cmdLine, int cmdShow) {
     WinAppWindow window{ "Hello world!", 600, 400 };
@@ -115,6 +121,7 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
         fence.set_completion_value(frame_index);
         frame_index++;
         fence.wait();
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 
     return 0;
