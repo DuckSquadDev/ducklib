@@ -383,13 +383,24 @@ inline auto to_d3d12_input_slot_type(InputSlotType slot_type) -> D3D12_INPUT_CLA
     }
 }
 
-inline auto to_d3d12_primitive_topology(PrimitiveTopology topology) -> D3D12_PRIMITIVE_TOPOLOGY_TYPE {
+inline auto to_d3d12_primitive_topology_type(PrimitiveTopology topology) -> D3D12_PRIMITIVE_TOPOLOGY_TYPE {
     switch (topology) {
     case PrimitiveTopology::UNDEFINED: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
     case PrimitiveTopology::POINT: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
     case PrimitiveTopology::LINE: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
     case PrimitiveTopology::TRIANGLE: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     case PrimitiveTopology::PATCH: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
+    default: std::abort();
+    }
+}
+
+inline auto to_d3d_primitive_topology(PrimitiveTopology topology) -> D3D_PRIMITIVE_TOPOLOGY {
+    switch (topology) {
+    case PrimitiveTopology::UNDEFINED: return D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+    case PrimitiveTopology::POINT: return D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
+    case PrimitiveTopology::LINE: return D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+    case PrimitiveTopology::TRIANGLE: return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    case PrimitiveTopology::PATCH: return D3D_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST;
     default: std::abort();
     }
 }

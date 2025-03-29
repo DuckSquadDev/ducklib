@@ -40,7 +40,6 @@ void Device::create_fence(uint64_t initial_value, Fence& out_fence) {
     }
 }
 
-
 void Device::create_descriptor_heap(DescriptorHeapType type, uint32_t count, DescriptorHeap& out_heap) {
     D3D12_DESCRIPTOR_HEAP_DESC heap_desc = {};
     D3D12_DESCRIPTOR_HEAP_TYPE d3d12_heap_type = to_d3d12_descriptor_heap_type(type);
@@ -48,7 +47,7 @@ void Device::create_descriptor_heap(DescriptorHeapType type, uint32_t count, Des
     heap_desc.Type = d3d12_heap_type;
     heap_desc.NumDescriptors = count;
     heap_desc.Flags = type != DescriptorHeapType::RT ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-    
+
     if (FAILED(d3d12_device->CreateDescriptorHeap(&heap_desc, IID_PPV_ARGS(&out_heap.d3d12_heap)))) {
         std::abort();
     }
@@ -64,7 +63,7 @@ void Device::create_cbuffer_descriptor(const Buffer& cbuffer, const Descriptor& 
 
     cbuffer_desc.BufferLocation = cbuffer.d3d12_resource->GetGPUVirtualAddress();
     cbuffer_desc.SizeInBytes = cbuffer.size;
-    
+
     d3d12_device->CreateConstantBufferView(&cbuffer_desc, descriptor.cpu_handle);
 }
 
@@ -73,7 +72,7 @@ void Device::create_srv_descriptor(void* resource, const DescriptorDesc* desc, c
         d3d12_device->CreateShaderResourceView(static_cast<ID3D12Resource*>(resource), nullptr, descriptor.cpu_handle);
         return;
     }
-    
+
     D3D12_SHADER_RESOURCE_VIEW_DESC d3d12_desc = {};
     auto d3d12_type = to_d3d12_srv_dimension(desc->type, desc->array_size);
 
@@ -132,7 +131,7 @@ void Device::create_srv_descriptor(void* resource, const DescriptorDesc* desc, c
         break;
     default: std::abort();
     }
-    
+
     d3d12_device->CreateShaderResourceView(static_cast<ID3D12Resource*>(resource), &d3d12_desc, descriptor.cpu_handle);
 }
 
@@ -141,7 +140,7 @@ void Device::create_uav_descriptor(void* resource, const DescriptorDesc* desc, c
         d3d12_device->CreateUnorderedAccessView(static_cast<ID3D12Resource*>(resource), nullptr, nullptr, descriptor.cpu_handle);
         return;
     }
-    
+
     D3D12_UNORDERED_ACCESS_VIEW_DESC d3d12_desc = {};
     auto d3d12_type = to_d3d12_uav_dimension(desc->type, desc->array_size);
 
@@ -190,7 +189,7 @@ void Device::create_rt_descriptor(void* resource, const DescriptorDesc* desc, co
         d3d12_device->CreateRenderTargetView(static_cast<ID3D12Resource*>(resource), nullptr, descriptor.cpu_handle);
         return;
     }
-    
+
     D3D12_RENDER_TARGET_VIEW_DESC d3d12_desc = {};
     auto d3d12_type = to_d3d12_rtv_dimension(desc->type, desc->array_size);
 
@@ -232,8 +231,8 @@ void Device::create_rt_descriptor(void* resource, const DescriptorDesc* desc, co
 }
 
 void Device::create_binding_set(const BindingSetDesc& binding_set_desc, BindingSet& out_set) {
-    D3D12_ROOT_PARAMETER d3d12_params[64] = {};
-    D3D12_DESCRIPTOR_RANGE d3d12_descriptor_ranges[64] = {};
+    D3D12_ROOT_PARAMETER1 d3d12_params[64] = {};
+    D3D12_DESCRIPTOR_RANGE1 d3d12_descriptor_ranges[64] = {};
     uint32_t i_ranges = 0;
 
     for (uint32_t i = 0; i < binding_set_desc.binding_count; ++i) {
@@ -273,23 +272,26 @@ void Device::create_binding_set(const BindingSetDesc& binding_set_desc, BindingS
 
     ID3DBlob* signature_blob = {};
     ID3DBlob* errors = {};
-    D3D12_ROOT_SIGNATURE_DESC signature_desc = {};
+    D3D12_VERSIONED_ROOT_SIGNATURE_DESC signature_desc = {};
 
-    signature_desc.NumParameters = binding_set_desc.binding_count;
-    signature_desc.pParameters = d3d12_params;
-    signature_desc.NumStaticSamplers = 0;
-    signature_desc.pStaticSamplers = nullptr;
-    signature_desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT;
-    
-    if (FAILED(D3D12SerializeRootSignature(&signature_desc, D3D_ROOT_SIGNATURE_VERSION_1_0, &signature_blob, &errors))) {
+    signature_desc.Version = D3D_ROOT_SIGNATURE_VERSION_1_1;
+    signature_desc.Desc_1_1.NumParameters = binding_set_desc.binding_count;
+    signature_desc.Desc_1_1.pParameters = d3d12_params;
+    signature_desc.Desc_1_1.NumStaticSamplers = 0;
+    signature_desc.Desc_1_1.pStaticSamplers = nullptr;
+    // signature_desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT;
+    signature_desc.Desc_1_1.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+    if (FAILED(D3D12SerializeVersionedRootSignature(&signature_desc, &signature_blob, &errors))) {
         std::abort();
     }
-    
-    if (FAILED(d3d12_device->CreateRootSignature(
-        0,
-        signature_blob->GetBufferPointer(),
-        signature_blob->GetBufferSize(),
-        IID_PPV_ARGS(&out_set.d3d12_signature)))) {
+
+    if (FAILED(
+        d3d12_device->CreateRootSignature(
+            0,
+            signature_blob->GetBufferPointer(),
+            signature_blob->GetBufferSize(),
+            IID_PPV_ARGS(&out_set.d3d12_signature)))) {
         std::abort();
     }
 }
@@ -316,6 +318,8 @@ void Device::create_pso(const BindingSet& binding_set, const PsoDesc& pso_desc, 
     d3d12_pso_desc.RasterizerState.ForcedSampleCount = 0;
     d3d12_pso_desc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 
+    d3d12_pso_desc.BlendState = CD3DX12_BLEND_DESC{ D3D12_DEFAULT };
+
     for (uint32_t i = 0; i < pso_desc.input_layout.element_count; ++i) {
         const InputLayoutItem& input_element = pso_desc.input_layout.elements[i];
         d3d12_input_elements[i].SemanticName = input_element.semantic_name;
@@ -326,12 +330,12 @@ void Device::create_pso(const BindingSet& binding_set, const PsoDesc& pso_desc, 
         d3d12_input_elements[i].Format = to_d3d12_format(input_element.format);
         d3d12_input_elements[i].InputSlotClass = to_d3d12_input_slot_type(input_element.slot_type);
     }
-    
+
     d3d12_pso_desc.InputLayout.NumElements = pso_desc.input_layout.element_count;
     d3d12_pso_desc.InputLayout.pInputElementDescs = d3d12_input_elements;
 
     d3d12_pso_desc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
-    d3d12_pso_desc.PrimitiveTopologyType = to_d3d12_primitive_topology(pso_desc.primitive_topology);
+    d3d12_pso_desc.PrimitiveTopologyType = to_d3d12_primitive_topology_type(pso_desc.primitive_topology);
     d3d12_pso_desc.NumRenderTargets = pso_desc.rt_count;
 
     for (uint32_t i = 0; i < pso_desc.rt_count; ++i) {
@@ -345,7 +349,7 @@ void Device::create_pso(const BindingSet& binding_set, const PsoDesc& pso_desc, 
     d3d12_pso_desc.CachedPSO.pCachedBlob = nullptr;
     d3d12_pso_desc.CachedPSO.CachedBlobSizeInBytes = 0;
     d3d12_pso_desc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
-    
+
     if (FAILED(d3d12_device->CreateGraphicsPipelineState(&d3d12_pso_desc, IID_PPV_ARGS(&pso_out.d3d12_pso)))) {
         std::abort();
     }
@@ -375,13 +379,14 @@ void Device::create_buffer(uint64_t byte_size, Buffer& out_buffer, HeapType heap
     resource_desc.SampleDesc.Quality = 0;
     resource_desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-    if (FAILED(d3d12_device->CreateCommittedResource(
-        &heap_props,
-        D3D12_HEAP_FLAG_NONE,
-        &resource_desc,
-        init_states,
-        nullptr,
-        IID_PPV_ARGS(&out_buffer.d3d12_resource)))) {
+    if (FAILED(
+        d3d12_device->CreateCommittedResource(
+            &heap_props,
+            D3D12_HEAP_FLAG_NONE,
+            &resource_desc,
+            init_states,
+            nullptr,
+            IID_PPV_ARGS(&out_buffer.d3d12_resource)))) {
         std::abort();
     }
 
