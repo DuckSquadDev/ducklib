@@ -116,7 +116,7 @@ struct BindingDesc {
 
 struct BindingSetDesc {
     BindingDesc bindings[64];
-    uint32_t binding_count;
+    uint32_t binding_count = 0;
 };
 
 struct BindingSet {
@@ -145,7 +145,7 @@ struct InputLayoutItem {
     const char* semantic_name;
     uint32_t semantic_index = 0;
     uint32_t input_slot = 0;
-    uint32_t aligned_byte_offset = D3D12_APPEND_ALIGNED_ELEMENT;
+    uint32_t aligned_byte_offset = 0;
     uint32_t instances_per_step = 0;
     Format format;
     InputSlotType slot_type = InputSlotType::PER_VERTEX_DATA;
@@ -195,9 +195,15 @@ struct CommandList {
     QueueType type;
 
     void close();
-    void reset();
+    void reset(const Pso* pso = nullptr);
 
     void set_pso(const Pso& pso);
+    void set_binding_set(const BindingSet& binding_set);
+    void set_viewport(float top_left_x, float top_left_y, float width, float height);
+    void set_scissor_rect(int32_t left, int32_t top, int32_t right, int32_t bottom);
+    void set_primitive_topology(PrimitiveTopology topology);
+    void set_vertex_buffer(const Buffer& vertex_buffer, uint32_t stride);
+    
     void draw(uint32_t vertex_count, uint32_t offset);
 
     void set_rt(const Descriptor& rt_descriptor);

@@ -345,6 +345,7 @@ void Device::create_pso(const BindingSet& binding_set, const PsoDesc& pso_desc, 
     d3d12_pso_desc.DSVFormat = to_d3d12_format(pso_desc.ds_format);
     d3d12_pso_desc.SampleDesc.Count = 1;
     d3d12_pso_desc.SampleDesc.Quality = 0;
+    d3d12_pso_desc.SampleMask = UINT_MAX;
     d3d12_pso_desc.NodeMask = 0;
     d3d12_pso_desc.CachedPSO.pCachedBlob = nullptr;
     d3d12_pso_desc.CachedPSO.CachedBlobSizeInBytes = 0;
