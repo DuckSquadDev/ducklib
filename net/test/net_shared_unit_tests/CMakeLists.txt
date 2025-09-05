@@ -22,6 +22,12 @@ add_executable(
     ${PROJECT_NAME}
     main.cpp
 )
+
+target_compile_options(${PROJECT_NAME} PRIVATE
+        $<$<CONFIG:Debug>:/Zi /Od>
+        $<$<CONFIG:RelWithDebInfo>:/Zi /O2>
+        $<$<CONFIG:Release>:/O2 /DNDEBUG>
+)
 target_include_directories(${PROJECT_NAME} PRIVATE ../../../include)
 link_directories(${CMAKE_SOURCE_DIR}/bin)
 target_link_libraries(

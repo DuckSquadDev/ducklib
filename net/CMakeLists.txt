@@ -18,6 +18,11 @@ add_library(${PROJECT_NAME} STATIC
         src/net_buffer_writer.cpp
         ../include/net/net_buffer_reader.h
         src/net_buffer_reader.cpp)
+target_compile_options(${PROJECT_NAME} PRIVATE
+        $<$<CONFIG:Debug>:/Zi /Od>
+        $<$<CONFIG:RelWithDebInfo>:/Zi /O2>
+        $<$<CONFIG:Release>:/O2 /DNDEBUG>
+)
 target_include_directories(${PROJECT_NAME} PUBLIC ../include)
 set_target_properties(${PROJECT_NAME} PROPERTIES
         PREFIX ""
