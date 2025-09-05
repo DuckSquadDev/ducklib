@@ -13,7 +13,9 @@ add_library(${PROJECT_NAME} STATIC
         ../include/core/app_window.h
         ../include/core/win/win_app_window.h
         src/logger.cpp
-        src/win/win_app_window.cpp)
+        src/win/win_app_window.cpp
+        ../include/math/math.h
+        src/math.cpp)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ../include)
 set_target_properties(${PROJECT_NAME} PROPERTIES
