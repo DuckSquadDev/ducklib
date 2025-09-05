@@ -1,9 +1,11 @@
 #ifndef D3D12_RHI_H
 #define D3D12_RHI_H
+#ifdef _DEBUG
 #include <d3d12sdklayers.h>
+#include <dxgidebug.h>
+#endif
 #include <dxgi1_4.h>
 #include <wrl/client.h>
-#include <dxgidebug.h>
 
 #include "device.h"
 #include "types.h"
@@ -18,7 +20,8 @@ struct Rhi {
     ComPtr<IDXGIFactory4> dxgi_factory;
 #ifdef _DEBUG
     ComPtr<ID3D12Debug> d3d12_debug;
-    // ComPtr<IDXGIDebug> dxgi_debug;
+    ComPtr<IDXGIDebug1> dxgi_debug;
+    ComPtr<IDXGIInfoQueue> dxgi_info_queue;
 #endif
 
     auto enumerate_adapters(Adapter* out_adapters, uint32_t max_adapter_count) -> uint32_t;

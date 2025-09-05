@@ -5,13 +5,36 @@
 namespace ducklib::render {
 auto create_rhi(Rhi& out_rhi) -> void {
 #ifdef _DEBUG
-    // if (DXGIGetDebugInterface(IID_PPV_ARGS(&out_rhi->dxgi_debug)) != S_OK) {
+    // <OLD>
+    // if (DXGIGetDebugInterface(IID_PPV_ARGS(&out_rhi.dxgi_debug)) != S_OK) {
     //     std::abort();
     // }
     //
-    // if (out_rhi->dxgi_debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL) != S_OK) {
+    // if (out_rhi.dxgi_debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL) != S_OK) {
     //     std::abort();
     // }
+    // </OLD>
+
+    // <NEW>
+    // auto module = LoadLibrary("dxgi.dll");
+    // auto get_debug_interface = reinterpret_cast<HRESULT(WINAPI*)(REFIID, void**)>(GetProcAddress(module, "DXGIGetDebugInterface1"));
+    //
+    // if (FAILED(get_debug_interface(IID_PPV_ARGS(&out_rhi.dxgi_debug)))) {
+    //     std::abort();
+    // }
+    //
+    // if (FAILED(out_rhi.dxgi_debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL))) {
+    //     std::abort();
+    // }
+    //
+    // if (FAILED(get_debug_interface(IID_PPV_ARGS(&out_rhi.dxgi_info_queue)))) {
+    //     std::abort();
+    // }
+    //
+    // if (FAILED(out_rhi.dxgi_info_queue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR, TRUE))) {
+    //     std::abort();
+    // }
+    // </NEW>
 
     if (FAILED(D3D12GetDebugInterface(IID_PPV_ARGS(&out_rhi.d3d12_debug)))) {
         std::abort();

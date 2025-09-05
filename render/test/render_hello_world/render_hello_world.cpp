@@ -4,6 +4,7 @@
 #include <thread>
 
 #include "core/win/win_app_window.h"
+#include "math/math.h"
 #include "render/resource_manager.h"
 #include "render/rhi/rhi.h"
 #include "render/rhi/types.h"
@@ -25,7 +26,10 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     render::CommandQueue queue = {};
     render::CommandList command_list = {};
     render::Buffer v_buffer = {};
+    render::Buffer c_buffer = {};
+    render::Descriptor cb_descriptor = {};
     render::DescriptorHeap rt_descriptor_heap = {};
+    render::DescriptorHeap resource_descriptor_heap = {};
     render::BindingSetDesc binding_set_desc = {};
     render::BindingSet binding_set = {};
     render::Shader vertex_shader = {};
@@ -43,8 +47,8 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     device.create_queue(render::QueueType::GRAPHICS, queue);
     device.create_command_list(render::QueueType::GRAPHICS, command_list);
 
-    compile_shader(L"../render/test/render_hello_world/d3d_shaders.hlsl", render::ShaderType::VERTEX, "VSMain", &vertex_shader);
-    compile_shader(L"../render/test/render_hello_world/d3d_shaders.hlsl", render::ShaderType::PIXEL, "PSMain", &pixel_shader);
+    compile_shader(L"shaders.hlsl", render::ShaderType::VERTEX, "VSMain", &vertex_shader);
+    compile_shader(L"shaders.hlsl", render::ShaderType::PIXEL, "PSMain", &pixel_shader);
 
     device.create_binding_set(binding_set_desc, binding_set);
     pso_desc.input_layout.element_count = 2;
@@ -62,11 +66,12 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
         { { -0.25f, -0.375f, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
     };
     device.create_buffer(sizeof(vertices), v_buffer, render::HeapType::UPLOAD);
-    upload_buffer_data(&v_buffer, 0, vertices, sizeof(vertices));
+    render::upload_buffer_data(&v_buffer, 0, vertices, sizeof(vertices));
 
     device.create_descriptor_heap(render::DescriptorHeapType::RT, 128, rt_descriptor_heap);
+    device.create_descriptor_heap(render::DescriptorHeapType::CBV_SRV_UAV, 128, resource_descriptor_heap);
     device.create_fence(frame_index, fence);
-    
+
     rhi.create_swap_chain(queue, 600, 400, render::Format::R8G8B8A8_UNORM, window.hwnd(), swap_chain);
     rt_descriptors[0] = { .cpu_handle = rt_descriptor_heap.cpu_handle(0) };
     swap_chain.d3d12_swap_chain->GetBuffer(0, IID_PPV_ARGS(&back_buffer));
@@ -74,6 +79,15 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     rt_descriptors[1] = { .cpu_handle = rt_descriptor_heap.cpu_handle(1) };
     swap_chain.d3d12_swap_chain->GetBuffer(1, IID_PPV_ARGS(&back_buffer));
     device.create_rt_descriptor(back_buffer, nullptr, rt_descriptors[1]);
+    
+    auto view_projection = Matrix4::perspective(deg_to_rad(90), 16.0f / 9.0f, 0.1f, 100.0f) * Matrix4::look_at(
+        { 0.0f, 0.0f, 4.0f },
+        { 0.0f, 0.0f, 0.0f },
+        { 0.0f, 1.0f, 0.0f });
+    device.create_buffer(sizeof(Matrix4), c_buffer, render::HeapType::UPLOAD);
+    render::upload_buffer_data(&c_buffer, 0, &view_projection, sizeof(view_projection));
+    cb_descriptor = { .cpu_handle = resource_descriptor_heap.cpu_handle(0) };
+    device.create_cbuffer_descriptor(c_buffer, cb_descriptor);
 
     while (window.is_open()) {
         window.process_messages();
@@ -81,8 +95,8 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
         uint32_t rt = frame_index % 2;
         ID3D12Resource* rt_buffer = nullptr;
         swap_chain.d3d12_swap_chain->GetBuffer(rt, IID_PPV_ARGS(&rt_buffer));
-        const float clear_color[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-        
+        constexpr float clear_color[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+
         command_list.reset(&pso);
         command_list.set_binding_set(binding_set);
         command_list.set_viewport(0.0f, 0.0f, 600.0f, 400.0f);

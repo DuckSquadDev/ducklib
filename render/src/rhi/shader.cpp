@@ -23,7 +23,7 @@ void compile_shader(const wchar_t* filename, ShaderType shader_type, const char*
         &errors);
 #else
     auto result = D3DCompileFromFile(
-        ilename,
+        filename,
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         entry_point,
@@ -33,7 +33,7 @@ void compile_shader(const wchar_t* filename, ShaderType shader_type, const char*
         &code_blob,
         &errors);
 #endif
-        if (FAILED(result)) {
+    if (FAILED(result)) {
         std::abort();
     }
 
