@@ -2,6 +2,8 @@
 
 #include "render/rhi/shader.h"
 
+#include "render/render_util.h"
+
 namespace ducklib::render {
 void compile_shader(const wchar_t* filename, ShaderType shader_type, const char* entry_point, Shader* shader_out) {
     ID3DBlob* code_blob;
@@ -11,7 +13,7 @@ void compile_shader(const wchar_t* filename, ShaderType shader_type, const char*
     auto d = std::filesystem::current_path();
 
 #ifndef NDEBUG
-    auto result = D3DCompileFromFile(
+    DL_CHECK_D3D(D3DCompileFromFile(
         filename,
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
@@ -20,9 +22,9 @@ void compile_shader(const wchar_t* filename, ShaderType shader_type, const char*
         D3DCOMPILE_DEBUG,
         0,
         &code_blob,
-        &errors);
+        &errors));
 #else
-    auto result = D3DCompileFromFile(
+    DL_CHECK_D3D(D3DCompileFromFile(
         filename,
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
@@ -31,12 +33,9 @@ void compile_shader(const wchar_t* filename, ShaderType shader_type, const char*
         0,
         0,
         &code_blob,
-        &errors);
+        &errors));
 #endif
-    if (FAILED(result)) {
-        std::abort();
-    }
-
+    
     shader_out->d3d_bytecode_blob = code_blob;
     shader_out->type = shader_type;
 }

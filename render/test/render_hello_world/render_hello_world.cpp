@@ -50,6 +50,11 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     compile_shader(L"shaders.hlsl", render::ShaderType::VERTEX, "VSMain", &vertex_shader);
     compile_shader(L"shaders.hlsl", render::ShaderType::PIXEL, "PSMain", &pixel_shader);
 
+    // binding_set_desc.binding_count = 1;
+    // binding_set_desc.bindings[0].type = render::BindingType::BUFFER_DESCRIPTOR;
+    // binding_set_desc.bindings[0].descriptor_binding.register_space = 0;
+    // binding_set_desc.bindings[0].descriptor_binding.shader_register = 0;
+
     device.create_binding_set(binding_set_desc, binding_set);
     pso_desc.input_layout.element_count = 2;
     pso_desc.input_layout.elements[0] = { "POSITION", 0, 0, 0, 0, render::Format::R32G32B32_FLOAT };
@@ -80,14 +85,14 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     swap_chain.d3d12_swap_chain->GetBuffer(1, IID_PPV_ARGS(&back_buffer));
     device.create_rt_descriptor(back_buffer, nullptr, rt_descriptors[1]);
     
-    auto view_projection = Matrix4::perspective(deg_to_rad(90), 16.0f / 9.0f, 0.1f, 100.0f) * Matrix4::look_at(
-        { 0.0f, 0.0f, 4.0f },
-        { 0.0f, 0.0f, 0.0f },
-        { 0.0f, 1.0f, 0.0f });
-    device.create_buffer(sizeof(Matrix4), c_buffer, render::HeapType::UPLOAD);
-    render::upload_buffer_data(&c_buffer, 0, &view_projection, sizeof(view_projection));
-    cb_descriptor = { .cpu_handle = resource_descriptor_heap.cpu_handle(0) };
-    device.create_cbuffer_descriptor(c_buffer, cb_descriptor);
+    // auto view_projection = Matrix4::perspective(deg_to_rad(90), 16.0f / 9.0f, 0.1f, 100.0f) * Matrix4::look_at(
+    //     { 0.0f, 0.0f, 1.0f },
+    //     { 0.0f, 0.0f, 0.0f },
+    //     { 0.0f, 1.0f, 0.0f });
+    // device.create_buffer(256, c_buffer, render::HeapType::UPLOAD);
+    // render::upload_buffer_data(&c_buffer, 0, &view_projection, sizeof(view_projection));
+    // cb_descriptor = { .cpu_handle = resource_descriptor_heap.cpu_handle(0) };
+    // device.create_cbuffer_descriptor(c_buffer, cb_descriptor);
 
     while (window.is_open()) {
         window.process_messages();
@@ -105,6 +110,7 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
         command_list.set_rt(rt_descriptors[rt]);
         command_list.clear_rt(rt_descriptors[rt], clear_color);
         command_list.set_primitive_topology(render::PrimitiveTopology::TRIANGLE);
+        // command_list.set_constant_buffer(0, c_buffer);
         command_list.set_vertex_buffer(v_buffer, sizeof(Vertex));
         command_list.draw(3, 0);
         command_list.resource_barrier(rt_buffer, render::ResourceState::RENDER_TARGET, render::ResourceState::PRESENT);

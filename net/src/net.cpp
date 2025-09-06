@@ -1,9 +1,9 @@
-#include "net/Net.h"
-
 #include <winsock2.h>
 #include <format>
 #include <stdexcept>
-#include <core/Logger.h>
+
+#include "net/Net.h"
+#include "core/logging/logger.h"
 
 namespace ducklib::net
 {

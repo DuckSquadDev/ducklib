@@ -9,13 +9,14 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(${PROJECT_NAME} STATIC
-        ../include/core/logger.h
+        ../include/core/logging/logger.h
         ../include/core/app_window.h
         ../include/core/win/win_app_window.h
         src/logger.cpp
         src/win/win_app_window.cpp
         ../include/math/math.h
-        src/math.cpp)
+        src/math.cpp
+        ../include/core/logging/log_level.h)
 
 target_compile_options(${PROJECT_NAME} PRIVATE
         $<$<CONFIG:Debug>:/Zi /Od>

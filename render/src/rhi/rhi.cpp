@@ -2,6 +2,8 @@
 
 #include "../../../include/render/rhi/rhi.h"
 
+#include "render/render_util.h"
+
 namespace ducklib::render {
 auto create_rhi(Rhi& out_rhi) -> void {
 #ifdef _DEBUG
@@ -19,33 +21,17 @@ auto create_rhi(Rhi& out_rhi) -> void {
     // auto module = LoadLibrary("dxgi.dll");
     // auto get_debug_interface = reinterpret_cast<HRESULT(WINAPI*)(REFIID, void**)>(GetProcAddress(module, "DXGIGetDebugInterface1"));
     //
-    // if (FAILED(get_debug_interface(IID_PPV_ARGS(&out_rhi.dxgi_debug)))) {
-    //     std::abort();
-    // }
-    //
-    // if (FAILED(out_rhi.dxgi_debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL))) {
-    //     std::abort();
-    // }
-    //
-    // if (FAILED(get_debug_interface(IID_PPV_ARGS(&out_rhi.dxgi_info_queue)))) {
-    //     std::abort();
-    // }
-    //
-    // if (FAILED(out_rhi.dxgi_info_queue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR, TRUE))) {
-    //     std::abort();
-    // }
+    // DL_CHECK_D3D(get_debug_interface(IID_PPV_ARGS(&out_rhi.dxgi_debug)));
+    // DL_CHECK_D3D(out_rhi.dxgi_debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL));
+    // DL_CHECK_D3D(get_debug_interface(IID_PPV_ARGS(&out_rhi.dxgi_info_queue)));
+    // DL_CHECK_D3D(out_rhi.dxgi_info_queue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR, TRUE));
     // </NEW>
 
-    if (FAILED(D3D12GetDebugInterface(IID_PPV_ARGS(&out_rhi.d3d12_debug)))) {
-        std::abort();
-    }
-
+    DL_CHECK_D3D(D3D12GetDebugInterface(IID_PPV_ARGS(&out_rhi.d3d12_debug)));
     out_rhi.d3d12_debug->EnableDebugLayer();
 #endif
 
-    if (FAILED(CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&out_rhi.dxgi_factory)))) {
-        std::abort();
-    }
+    DL_CHECK_D3D(CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&out_rhi.dxgi_factory)));
 }
 
 auto Rhi::enumerate_adapters(Adapter* out_adapters, uint32_t max_adapter_count) -> uint32_t {
@@ -54,10 +40,7 @@ auto Rhi::enumerate_adapters(Adapter* out_adapters, uint32_t max_adapter_count) 
     DXGI_ADAPTER_DESC1 adapter_desc = {};
 
     while (dxgi_factory->EnumAdapters1(i, &current_adapter) != DXGI_ERROR_NOT_FOUND && i < max_adapter_count) {
-        if (FAILED(current_adapter->GetDesc1(&adapter_desc))) {
-            std::abort();
-        }
-
+        DL_CHECK_D3D_THROW(current_adapter->GetDesc1(&adapter_desc));
         out_adapters[i].dxgi_adapter = ComPtr<IDXGIAdapter1>(current_adapter);
         WideCharToMultiByte(CP_ACP, 0, adapter_desc.Description, -1, out_adapters[i].name, sizeof(out_adapters[i]), nullptr, nullptr);
 
@@ -68,10 +51,8 @@ auto Rhi::enumerate_adapters(Adapter* out_adapters, uint32_t max_adapter_count) 
 }
 
 void Rhi::create_device(const Adapter& adapter, Device& out_device) {
-    if (FAILED(
-        D3D12CreateDevice(adapter.dxgi_adapter.Get(), D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(out_device.d3d12_device.GetAddressOf())))) {
-        std::abort();
-    }
+    DL_CHECK_D3D(
+        D3D12CreateDevice(adapter.dxgi_adapter.Get(), D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(out_device.d3d12_device.GetAddressOf())));
 }
 
 void Rhi::create_swap_chain(
@@ -91,15 +72,13 @@ void Rhi::create_swap_chain(
     desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
     desc.SampleDesc.Count = 1;
 
-    if (FAILED(
+    DL_CHECK_D3D(
         dxgi_factory->CreateSwapChainForHwnd(
             command_queue.d3d12_queue.Get(),
             window_handle,
             &desc,
             nullptr,
             nullptr,
-            &out_swap_chain.d3d12_swap_chain))) {
-        std::abort();
-    }
+            &out_swap_chain.d3d12_swap_chain));
 }
 }

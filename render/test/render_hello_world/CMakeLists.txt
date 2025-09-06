@@ -22,6 +22,6 @@ set(SOURCE_FILE "${CMAKE_SOURCE_DIR}shaders.hlsl")
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_CURRENT_SOURCE_DIR}/d3d_shaders.hlsl"
+        "${CMAKE_CURRENT_SOURCE_DIR}/shaders.hlsl"
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/shaders.hlsl"
-        COMMENT "Copying d3d_shaders.hlsl to executable directory")
+        COMMENT "Copying shaders.hlsl to executable directory")

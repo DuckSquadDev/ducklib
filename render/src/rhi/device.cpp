@@ -3,6 +3,8 @@
 
 #include "core/win/win_app_window.h"
 #include "render/rhi/device.h"
+
+#include "render/render_util.h"
 #include "render/rhi/command_list.h"
 #include "render/rhi/shader.h"
 
@@ -14,30 +16,20 @@ void Device::create_queue(QueueType type, CommandQueue& out_queue) {
     queue_desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
     queue_desc.NodeMask = 0;
 
-    if (FAILED(d3d12_device->CreateCommandQueue(&queue_desc, IID_PPV_ARGS(&out_queue.d3d12_queue)))) {
-        std::abort();
-    }
+    DL_CHECK_D3D(d3d12_device->CreateCommandQueue(&queue_desc, IID_PPV_ARGS(&out_queue.d3d12_queue)));
 }
 
 void Device::create_command_list(QueueType queue_type, CommandList& out_list) {
     out_list.type = queue_type;
     auto d3d12_type = to_d3d12_queue_type(queue_type);
 
-    if (FAILED(d3d12_device->CreateCommandAllocator(d3d12_type, IID_PPV_ARGS(&out_list.d3d12_alloc)))) {
-        throw std::runtime_error("failed to create D3D12 command allocator");
-    }
-
-    if (FAILED(d3d12_device->CreateCommandList(0, d3d12_type, out_list.d3d12_alloc, nullptr, IID_PPV_ARGS(&out_list.d3d12_list)))) {
-        throw std::runtime_error("failed to create D3D12 command list");
-    }
-
+    DL_CHECK_D3D(d3d12_device->CreateCommandAllocator(d3d12_type, IID_PPV_ARGS(&out_list.d3d12_alloc)));
+    DL_CHECK_D3D(d3d12_device->CreateCommandList(0, d3d12_type, out_list.d3d12_alloc, nullptr, IID_PPV_ARGS(&out_list.d3d12_list)));
     out_list.close();
 }
 
 void Device::create_fence(uint64_t initial_value, Fence& out_fence) {
-    if (FAILED(d3d12_device->CreateFence(initial_value, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&out_fence.d3d12_fence)))) {
-        std::abort();
-    }
+    DL_CHECK_D3D(d3d12_device->CreateFence(initial_value, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&out_fence.d3d12_fence)));
 }
 
 void Device::create_descriptor_heap(DescriptorHeapType type, uint32_t count, DescriptorHeap& out_heap) {
@@ -48,9 +40,7 @@ void Device::create_descriptor_heap(DescriptorHeapType type, uint32_t count, Des
     heap_desc.NumDescriptors = count;
     heap_desc.Flags = type != DescriptorHeapType::RT ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
-    if (FAILED(d3d12_device->CreateDescriptorHeap(&heap_desc, IID_PPV_ARGS(&out_heap.d3d12_heap)))) {
-        std::abort();
-    }
+    DL_CHECK_D3D(d3d12_device->CreateDescriptorHeap(&heap_desc, IID_PPV_ARGS(&out_heap.d3d12_heap)));
 
     out_heap.first_cpu_handle = out_heap.d3d12_heap->GetCPUDescriptorHandleForHeapStart();
     out_heap.first_gpu_handle = out_heap.d3d12_heap->GetGPUDescriptorHandleForHeapStart();
@@ -282,18 +272,14 @@ void Device::create_binding_set(const BindingSetDesc& binding_set_desc, BindingS
     // signature_desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT;
     signature_desc.Desc_1_1.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-    if (FAILED(D3D12SerializeVersionedRootSignature(&signature_desc, &signature_blob, &errors))) {
-        std::abort();
-    }
+    DL_CHECK_D3D(D3D12SerializeVersionedRootSignature(&signature_desc, &signature_blob, &errors));
 
-    if (FAILED(
+    DL_CHECK_D3D(
         d3d12_device->CreateRootSignature(
             0,
             signature_blob->GetBufferPointer(),
             signature_blob->GetBufferSize(),
-            IID_PPV_ARGS(&out_set.d3d12_signature)))) {
-        std::abort();
-    }
+            IID_PPV_ARGS(&out_set.d3d12_signature)));
 }
 
 void Device::create_pso(const BindingSet& binding_set, const PsoDesc& pso_desc, Pso& pso_out) {
@@ -351,9 +337,7 @@ void Device::create_pso(const BindingSet& binding_set, const PsoDesc& pso_desc, 
     d3d12_pso_desc.CachedPSO.CachedBlobSizeInBytes = 0;
     d3d12_pso_desc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
-    if (FAILED(d3d12_device->CreateGraphicsPipelineState(&d3d12_pso_desc, IID_PPV_ARGS(&pso_out.d3d12_pso)))) {
-        std::abort();
-    }
+    DL_CHECK_D3D(d3d12_device->CreateGraphicsPipelineState(&d3d12_pso_desc, IID_PPV_ARGS(&pso_out.d3d12_pso)));
 }
 
 void Device::create_buffer(uint64_t byte_size, Buffer& out_buffer, HeapType heap_type) {
@@ -380,16 +364,14 @@ void Device::create_buffer(uint64_t byte_size, Buffer& out_buffer, HeapType heap
     resource_desc.SampleDesc.Quality = 0;
     resource_desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-    if (FAILED(
+    DL_CHECK_D3D(
         d3d12_device->CreateCommittedResource(
             &heap_props,
             D3D12_HEAP_FLAG_NONE,
             &resource_desc,
             init_states,
             nullptr,
-            IID_PPV_ARGS(&out_buffer.d3d12_resource)))) {
-        std::abort();
-    }
+            IID_PPV_ARGS(&out_buffer.d3d12_resource)));
 
     out_buffer.size = byte_size;
 }

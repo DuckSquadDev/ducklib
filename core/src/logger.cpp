@@ -3,29 +3,29 @@
 #include <iterator>
 #include <array>
 
-#include "core/logger.h"
+#include "../../include/core/logging/logger.h"
 
 
 namespace ducklib {
 std::mutex Logger::stdout_mutex;
 
 auto Logger::log_error(std::string_view text) -> void {
-    return log(Level::ERROR, text);
+    return log(LogLevel::ERROR, text);
 }
 
 auto Logger::log_warn(std::string_view text) -> void {
-    return log(Level::WARNING, text);
+    return log(LogLevel::WARNING, text);
 }
 
 auto Logger::log_info(std::string_view text) -> void {
-    return log(Level::INFO, text);
+    return log(LogLevel::INFO, text);
 }
 
 auto Logger::log_debug(std::string_view text) -> void {
-    return log(Level::DEBUG, text);
+    return log(LogLevel::DEBUG, text);
 }
 
-auto Logger::log(Level level, std::string_view text) -> void {
+auto Logger::log(LogLevel level, std::string_view text) -> void {
     if (level > log_level_setting) {
         return;
     }
@@ -41,7 +41,7 @@ auto Logger::log(Level level, std::string_view text) -> void {
 }
 
 
-auto Logger::write_prefix_to_message(const std::span<char>& buffer, Level level) -> std::span<char>::size_type {
+auto Logger::write_prefix_to_message(const std::span<char>& buffer, LogLevel level) -> std::span<char>::size_type {
     constexpr auto prefixes = std::array<std::string_view, 4>{ "ERROR", "WARNING", "INFO", "DEBUG" };
     constexpr auto delimiter = std::string_view{ ": " };
 

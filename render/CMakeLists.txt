@@ -23,7 +23,8 @@ add_library(${PROJECT_NAME} STATIC
         src/resource_manager.cpp
         ../include/render/rhi/shader.h
         src/rhi/shader.cpp
-        src/rhi/types.cpp)
+        src/rhi/types.cpp
+        ../include/render/render_util.h)
 
 target_compile_options(${PROJECT_NAME} PRIVATE
         $<$<CONFIG:Debug>:/Zi /Od>

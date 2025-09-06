@@ -202,6 +202,7 @@ struct CommandList {
     void set_viewport(float top_left_x, float top_left_y, float width, float height);
     void set_scissor_rect(int32_t left, int32_t top, int32_t right, int32_t bottom);
     void set_primitive_topology(PrimitiveTopology topology);
+    void set_constant_buffer(uint32_t param_index, Buffer constant_buffer);
     void set_vertex_buffer(const Buffer& vertex_buffer, uint32_t stride);
     
     void draw(uint32_t vertex_count, uint32_t offset);
