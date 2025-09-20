@@ -43,6 +43,10 @@ Vector3 cross(Vector3 v1, Vector3 v2) {
         v1.x * v2.y - v1.y * v2.x };
 }
 
+Matrix4::Matrix4() {
+    *this = identity;
+}
+
 Matrix4::Matrix4(
     float m00, float m01, float m02, float m03,
     float m10, float m11, float m12, float m13,
@@ -83,6 +87,27 @@ Matrix4 Matrix4::operator*(const Matrix4& o) const {
         };
 }
 
+Matrix4& Matrix4::transpose() {
+    for (int i = 0; i < 4; i++) {
+        for (int j = i + 1; j < 4; j++) {
+            auto temp = m(i, j);
+            m(i, j) = m(j, i);
+            m(j, i) = temp;
+        }
+    }
+
+    return *this;
+}
+
+Matrix4 Matrix4::transposed() const {
+    return Matrix4 {
+        m(0, 0), m(1, 0), m(2, 0), m(3, 0),
+        m(0, 1), m(1, 1), m(2, 1), m(3, 1),
+        m(0, 2), m(1, 2), m(2, 2), m(3, 2),
+        m(0, 3), m(1, 3), m(2, 3), m(3, 3)
+    };
+}
+
 Matrix4 Matrix4::identity {
     1.0f, 0.0f, 0.0f, 0.0f,
     0.0f, 1.0f, 0.0f, 0.0f,
@@ -104,36 +129,60 @@ Matrix4 Matrix4::rotation_x(float radians) {
 
     return Matrix4{
         1.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, c, -s, 0.0f,
-        0.0f, s, c, 0.0f,
+        0.0f, c, s, 0.0f,
+        0.0f, -s, c, 0.0f,
         0.0f, 0.0f, 0.0f, 1.0f
     };
 }
 
-Matrix4 Matrix4::look_at(Vector3 eye, Vector3 target, Vector3 up) {
+Matrix4 Matrix4::rotation_y(float radians) {
+    auto c = std::cos(radians);
+    auto s = std::sin(radians);
+
+    return Matrix4{
+        c, 0.0f, -s, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        s, 0.0f, c, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f
+    };
+}
+
+Matrix4 Matrix4::rotation_z(float radians) {
+    auto c = std::cos(radians);
+    auto s = std::sin(radians);
+
+    return Matrix4{
+        c, -s, 0.0f, 0.0f,
+        s, c, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f
+    };
+}
+
+Matrix4 Matrix4::look_at_lh(Vector3 eye, Vector3 target, Vector3 up) {
     auto dir = (target - eye).normalize();
     auto right = cross(up, dir).normalize();
     auto real_up = cross(dir, right);
 
     return Matrix4 {
-        right.x, real_up.x, -dir.x, 0.0f,
-        right.y, real_up.y, -dir.y, 0.0f,
+        right.x, real_up.x, dir.x, 0.0f,
+        right.y, real_up.y, dir.y, 0.0f,
         right.z, real_up.z, dir.z, 0.0f,
-        -dot(right, eye), -dot(real_up, eye), dot(dir, eye), 1.0f };
+        -dot(right, eye), -dot(real_up, eye), -dot(dir, eye), 1.0f };
 }
 
-Matrix4 Matrix4::perspective(float fov, float aspect, float near, float far) {
-    assert(fov > 0.0f && fov < std::numbers::pi);
+Matrix4 Matrix4::perspective_lh(float fov_rad, float aspect, float near, float far) {
+    assert(fov_rad > 0.0f && fov_rad < std::numbers::pi);
     assert(aspect > 0.0f);
     assert(near > 0.0f && near < far);
     
-    auto t = std::tan(fov / 2);
-    auto fnm = far - near;
+    auto t = std::tan(fov_rad / 2.0f);
+    auto fmn = far - near;
 
     return Matrix4 {
         1.0f / (aspect * t), 0.0f, 0.0f, 0.0f,
         0.0f, 1.0f / t, 0.0f, 0.0f,
-        0.0f, 0.0f, -(far + near) / fnm, -2 * far * near / fnm,
-        0.0f, 0.0f, -1.0f, 0.0f };
+        0.0f, 0.0f, far / fmn, 1.0f,
+        0.0f, 0.0f, -near * far / fmn, 0.0f };
 }
 }

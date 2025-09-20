@@ -4,6 +4,8 @@
 #include <numbers>
 #include <initializer_list>
 
+#define DL_COLUMN_MAJOR 1
+
 namespace ducklib {
 struct Matrix4;
 
@@ -38,6 +40,7 @@ private:
     float v[16];
 
 public:
+    Matrix4();
     Matrix4(
         float m00, float m01, float m02, float m03,
         float m10, float m11, float m12, float m13,
@@ -47,19 +50,32 @@ public:
     Vector3 operator * (Vector3 o) const;
     Matrix4 operator * (const Matrix4& o) const;
 
+    Matrix4& transpose();
+    Matrix4 transposed() const;
+
     inline float& operator()(int row, int column) {
-        return v[row * 4 + column];
+#ifdef DL_COLUMN_MAJOR
+        return v[row + 4 * column];
+#else
+        return v[4 * row + column];
+#endif
     }
 
     inline const float& operator()(int row, int column) const {
-        return v[row * 4 + column];
+#ifdef DL_COLUMN_MAJOR
+        return v[row + 4 * column];
+#else
+        return v[4 * row + column];
+#endif
     }
 
     static Matrix4 identity;
     static Matrix4 translation(float x, float y, float z);
     static Matrix4 rotation_x(float radians);
-    static Matrix4 look_at(Vector3 eye, Vector3 target, Vector3 up);
-    static Matrix4 perspective(float fov, float aspect, float near, float far);
+    static Matrix4 rotation_y(float radians);
+    static Matrix4 rotation_z(float radians);
+    static Matrix4 look_at_lh(Vector3 eye, Vector3 target, Vector3 up);
+    static Matrix4 perspective_lh(float fov_rad, float aspect, float near, float far);
 
 private:
     float& m(int row, int column) {

@@ -66,6 +66,10 @@ void CommandList::set_primitive_topology(PrimitiveTopology topology) {
     d3d12_list->IASetPrimitiveTopology(to_d3d_primitive_topology(topology));
 }
 
+void CommandList::set_constant_buffer(uint32_t param_index, Buffer constant_buffer) {
+    d3d12_list->SetGraphicsRootConstantBufferView(param_index, constant_buffer.d3d12_resource->GetGPUVirtualAddress());
+}
+
 void CommandList::set_vertex_buffer(const Buffer& vertex_buffer, uint32_t stride) {
     D3D12_VERTEX_BUFFER_VIEW vb_view = {};
     
