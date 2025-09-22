@@ -43,4 +43,4 @@ target_link_libraries(${PROJECT_NAME}
         dxguid
         d3dcompiler)
 
-add_subdirectory(test/render_hello_world)
+add_subdirectory(test/render_hello_triangle)

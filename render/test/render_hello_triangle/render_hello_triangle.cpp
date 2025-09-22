@@ -50,7 +50,7 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     uint32_t frame_index = 0;
     ID3D12Resource* back_buffer = nullptr;
 
-    render::log = output;
+    // render::log = output;
 
     create_rhi(rhi);
     rhi.enumerate_adapters(adapters, 1);
@@ -93,9 +93,11 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     rt_descriptors[0] = { .cpu_handle = rt_descriptor_heap.cpu_handle(0) };
     swap_chain.d3d12_swap_chain->GetBuffer(0, IID_PPV_ARGS(&back_buffer));
     device.create_rt_descriptor(back_buffer, nullptr, rt_descriptors[0]);
+    back_buffer->Release();
     rt_descriptors[1] = { .cpu_handle = rt_descriptor_heap.cpu_handle(1) };
     swap_chain.d3d12_swap_chain->GetBuffer(1, IID_PPV_ARGS(&back_buffer));
     device.create_rt_descriptor(back_buffer, nullptr, rt_descriptors[1]);
+    back_buffer->Release();
 
     auto view = Matrix4::look_at_lh(
         { 0.0f, 0.0f, -2.0f },
@@ -141,8 +143,21 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
         fence.wait();
         frame_index++;
 
+        rt_buffer->Release();
+
         std::this_thread::sleep_for(std::chrono::milliseconds(8));
     }
+
+    c_buffer.d3d12_resource->Release();
+    fence.d3d12_fence->Release();
+    swap_chain.d3d12_swap_chain->Release();
+    resource_descriptor_heap.d3d12_heap->Release();
+    rt_descriptor_heap.d3d12_heap->Release();
+    v_buffer.d3d12_resource->Release();
+    pso.d3d12_pso->Release();
+    binding_set.d3d12_signature->Release();
+    pixel_shader.d3d_bytecode_blob->Release();
+    vertex_shader.d3d_bytecode_blob->Release();
 
     return 0;
 }

@@ -24,7 +24,7 @@ void Device::create_command_list(QueueType queue_type, CommandList& out_list) {
     auto d3d12_type = to_d3d12_queue_type(queue_type);
 
     DL_CHECK_D3D(d3d12_device->CreateCommandAllocator(d3d12_type, IID_PPV_ARGS(&out_list.d3d12_alloc)));
-    DL_CHECK_D3D(d3d12_device->CreateCommandList(0, d3d12_type, out_list.d3d12_alloc, nullptr, IID_PPV_ARGS(&out_list.d3d12_list)));
+    DL_CHECK_D3D(d3d12_device->CreateCommandList(0, d3d12_type, out_list.d3d12_alloc.Get(), nullptr, IID_PPV_ARGS(&out_list.d3d12_list)));
     out_list.close();
 }
 

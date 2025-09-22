@@ -1,5 +1,6 @@
 #ifndef DUCKLIB_RENDER_UTIL_H
 #define DUCKLIB_RENDER_UTIL_H
+#include <print>
 #include <source_location>
 #include <string_view>
 #include <Windows.h>
@@ -7,7 +8,10 @@
 #include "../core/logging/log_level.h"
 
 namespace ducklib::render {
-inline void (*log)(std::string_view message, LogLevel level, std::source_location source_location);
+// inline void (*log)(std::string_view message, LogLevel level, std::source_location source_location);
+inline void log(std::string_view message, LogLevel level, std::source_location source_location) {
+    std::println("{}", message.data());
+}
 
 inline LPSTR format_check_message(HRESULT hresult, std::string_view text) {
     LPSTR msg_ptr;
@@ -28,11 +32,9 @@ inline LPSTR format_check_message(HRESULT hresult, std::string_view text) {
     do { \
         HRESULT result = (expr); \
         if (FAILED(result)) { \
-            if (log) { \
                 auto message = format_check_message(result, #expr); \
                 log(message, ::ducklib::LogLevel::ERROR, std::source_location::current()); \
                 LocalFree(message); \
-            } \
             return; \
         } \
     } while (false)

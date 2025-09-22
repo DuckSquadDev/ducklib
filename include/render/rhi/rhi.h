@@ -18,7 +18,7 @@ auto create_rhi(Rhi& out_rhi) -> void;
 
 struct Rhi {
     ComPtr<IDXGIFactory4> dxgi_factory;
-#ifdef _DEBUG
+#ifndef NDEBUG
     ComPtr<ID3D12Debug> d3d12_debug;
     ComPtr<IDXGIDebug1> dxgi_debug;
     ComPtr<IDXGIInfoQueue> dxgi_info_queue;

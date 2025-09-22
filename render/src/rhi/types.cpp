@@ -31,7 +31,7 @@ void CommandList::reset(const Pso* pso) {
     }
 
     ID3D12PipelineState* d3d12_pso = pso != nullptr ? pso->d3d12_pso : nullptr;
-    if (FAILED(d3d12_list->Reset(d3d12_alloc, d3d12_pso))) {
+    if (FAILED(d3d12_list->Reset(d3d12_alloc.Get(), d3d12_pso))) {
         std::abort();
     }
 }
@@ -112,7 +112,7 @@ void CommandQueue::signal(const Fence& fence, uint64_t value) {
 }
 
 void CommandQueue::execute(const CommandList& list) {
-    ID3D12CommandList* d3d12_lists[] = { list.d3d12_list };
+    ID3D12CommandList* d3d12_lists[] = { list.d3d12_list.Get() };
     d3d12_queue->ExecuteCommandLists(std::size(d3d12_lists), d3d12_lists);
 }
 }

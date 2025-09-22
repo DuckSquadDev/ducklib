@@ -1,31 +1,25 @@
 #include <d3d12.h>
 
-#include "../../../include/render/rhi/rhi.h"
-
+#include "render/rhi/rhi.h"
 #include "render/render_util.h"
 
 namespace ducklib::render {
 auto create_rhi(Rhi& out_rhi) -> void {
-#ifdef _DEBUG
-    // <OLD>
-    // if (DXGIGetDebugInterface(IID_PPV_ARGS(&out_rhi.dxgi_debug)) != S_OK) {
-    //     std::abort();
-    // }
-    //
-    // if (out_rhi.dxgi_debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL) != S_OK) {
-    //     std::abort();
-    // }
-    // </OLD>
+#ifndef NDEBUG
+    IDXGIDebug* dxgi_debug = nullptr;
+    if (DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgi_debug)) != S_OK) {
+        std::abort();
+    }
 
-    // <NEW>
-    // auto module = LoadLibrary("dxgi.dll");
-    // auto get_debug_interface = reinterpret_cast<HRESULT(WINAPI*)(REFIID, void**)>(GetProcAddress(module, "DXGIGetDebugInterface1"));
-    //
-    // DL_CHECK_D3D(get_debug_interface(IID_PPV_ARGS(&out_rhi.dxgi_debug)));
-    // DL_CHECK_D3D(out_rhi.dxgi_debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL));
-    // DL_CHECK_D3D(get_debug_interface(IID_PPV_ARGS(&out_rhi.dxgi_info_queue)));
-    // DL_CHECK_D3D(out_rhi.dxgi_info_queue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR, TRUE));
-    // </NEW>
+    if (dxgi_debug->QueryInterface(__uuidof(IDXGIDebug1), &out_rhi.dxgi_debug) != S_OK) {
+        std::abort();
+    }
+
+    dxgi_debug->Release();
+    
+    if (out_rhi.dxgi_debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL) != S_OK) {
+        std::abort();
+    }
 
     DL_CHECK_D3D(D3D12GetDebugInterface(IID_PPV_ARGS(&out_rhi.d3d12_debug)));
     out_rhi.d3d12_debug->EnableDebugLayer();
@@ -41,7 +35,8 @@ auto Rhi::enumerate_adapters(Adapter* out_adapters, uint32_t max_adapter_count) 
 
     while (dxgi_factory->EnumAdapters1(i, &current_adapter) != DXGI_ERROR_NOT_FOUND && i < max_adapter_count) {
         DL_CHECK_D3D_THROW(current_adapter->GetDesc1(&adapter_desc));
-        out_adapters[i].dxgi_adapter = ComPtr<IDXGIAdapter1>(current_adapter);
+        out_adapters[i].dxgi_adapter.Attach(current_adapter);
+        current_adapter->Release();
         WideCharToMultiByte(CP_ACP, 0, adapter_desc.Description, -1, out_adapters[i].name, sizeof(out_adapters[i]), nullptr, nullptr);
 
         ++i;

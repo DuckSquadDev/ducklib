@@ -1,7 +1,6 @@
 #include <filesystem>
 
 #include "render/rhi/shader.h"
-
 #include "render/render_util.h"
 
 namespace ducklib::render {

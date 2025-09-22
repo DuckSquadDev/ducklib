@@ -190,8 +190,8 @@ struct Fence {
 };
 
 struct CommandList {
-    ID3D12CommandAllocator* d3d12_alloc = nullptr;
-    ID3D12GraphicsCommandList2* d3d12_list = nullptr;
+    ComPtr<ID3D12CommandAllocator> d3d12_alloc = nullptr;
+    ComPtr<ID3D12GraphicsCommandList2> d3d12_list = nullptr;
     QueueType type;
 
     void close();
