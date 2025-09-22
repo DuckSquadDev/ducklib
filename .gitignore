@@ -20,6 +20,7 @@ out/
 [Rr]elease/
 [Rr]eleases/
 cmake-build-debug/
+cmake-build-debug-mingw/
 x64/
 x86/
 bld/
