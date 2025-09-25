@@ -44,3 +44,4 @@ target_link_libraries(${PROJECT_NAME}
         d3dcompiler)
 
 add_subdirectory(test/render_hello_triangle)
+add_subdirectory(test/render_hello_gui)

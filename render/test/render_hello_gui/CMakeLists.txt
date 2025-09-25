@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.31)
 
-project(ducklib-render-test-hello-triangle)
+project(ducklib-render-test-hello-gui)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(${PROJECT_NAME} WIN32
-        render_hello_triangle.cpp)
+        render_hello_gui.cpp)
 
 target_compile_options(${PROJECT_NAME} PRIVATE
         $<$<CONFIG:Debug>:/Zi /Od>

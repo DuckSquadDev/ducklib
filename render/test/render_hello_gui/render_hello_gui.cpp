@@ -22,6 +22,10 @@ struct Vertex {
     float color[4];
 };
 
+struct GuiVertex {
+    float pos[2];
+};
+
 void output(std::string_view message, LogLevel level, std::source_location source_location) {
     std::println("{}", message.data());
 }
@@ -111,6 +115,34 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     cb_descriptor = { .cpu_handle = resource_descriptor_heap.cpu_handle(0) };
     device.create_cbuffer_descriptor(c_buffer, cb_descriptor);
 
+
+    // GUI setup
+    render::Buffer gv_buffer = {};
+    render::Buffer gi_buffer = {};
+    render::Pso gui_pso = {};
+    render::PsoDesc gui_pso_desc = {};
+    render::BindingSet gui_binding_set = {};
+    render::BindingSetDesc gui_binding_set_desc = {};
+    render::Shader gui_vshader = {};
+    render::Shader gui_pshader = {};
+
+    GuiVertex rect_verts[] = {
+        { 10.0f, 10.0f }, { 200.0f, 10.0f }, { 10.0f, 120.0f }, { 200.0f, 10.0f }, { 200.0f, 120.0f }, { 10.0f, 120.0f }
+    };
+    device.create_buffer(1024, gv_buffer, render::HeapType::UPLOAD);
+    render::upload_buffer_data(gv_buffer, 0, rect_verts, sizeof(rect_verts));
+
+    gui_binding_set_desc.binding_count = 0;
+    device.create_binding_set(gui_binding_set_desc, gui_binding_set);
+
+    gui_pso_desc.input_layout.element_count = 1;
+    gui_pso_desc.input_layout.elements[0] = { "POSITION", 0, 0, 0, 0, render::Format::R32G32_FLOAT };
+    gui_pso_desc.vertex_shader = &gui_vshader;
+    gui_pso_desc.pixel_shader = &gui_pshader;
+    gui_pso_desc.rt_count = 1;
+    gui_pso_desc.rt_formats[0] = render::Format::R8G8B8A8_UNORM;
+    device.create_pso(gui_binding_set, gui_pso_desc, gui_pso);
+    
     while (window.is_open()) {
         window.process_messages();
 
@@ -134,6 +166,12 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
         command_list.set_constant_buffer(0, c_buffer);
         command_list.set_vertex_buffer(v_buffer, sizeof(Vertex));
         command_list.draw(3, 0);
+
+        // GUI stuff
+        command_list.set_vertex_buffer(gv_buffer, sizeof(GuiVertex));
+        command_list.draw(6, 0);
+        // /GUI stuff
+
         command_list.resource_barrier(rt_buffer, render::ResourceState::RENDER_TARGET, render::ResourceState::PRESENT);
         command_list.close();
         queue.execute(command_list);
