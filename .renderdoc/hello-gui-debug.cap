@@ -16,7 +16,7 @@
             "captureCallstacks": true,
             "captureCallstacksOnlyDraws": false,
             "debugOutputMute": true,
-            "delayForDebugger": 0,
+            "delayForDebugger": 2,
             "hookIntoChildren": false,
             "refAllResources": true,
             "softMemoryLimit": 0,

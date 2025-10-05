@@ -23,6 +23,7 @@ struct GlyphAtlasInfo {
     int descent;
     int line_gap;
     std::map<uint32_t, GlyphInfo> glyph_infos;
+    uint32_t space_width;
 };
 
 GlyphAtlasInfo generate_glyph_atlas(int codepoint_start, int codepoint_end, std::string_view font, uint8_t size = 16);

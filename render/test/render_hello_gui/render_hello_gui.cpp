@@ -173,7 +173,7 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
 
     // Text setup
     auto tv_buffer_size = 2048;
-    auto test_string = "hello";
+    auto test_string = "hello wörld";
     render::Pso text_pso = {};
     render::PsoDesc text_pso_desc = {};
     render::Shader text_vshader = {};
