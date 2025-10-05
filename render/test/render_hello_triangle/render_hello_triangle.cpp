@@ -1,6 +1,4 @@
-// #include <cassert>
-// #include <Windows.h>
-#include <memory>
+#include <iostream>
 #include <print>
 #include <thread>
 
@@ -23,7 +21,8 @@ struct Vertex {
 };
 
 void output(std::string_view message, LogLevel level, std::source_location source_location) {
-    std::println("{}", message.data());
+    std::print("{} ({}): {}", source_location.file_name(), source_location.line(), message.data());
+    std::cout.flush();
 }
 
 int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char* cmdLine, int cmdShow) {
@@ -50,7 +49,7 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     uint32_t frame_index = 0;
     ID3D12Resource* back_buffer = nullptr;
 
-    // render::log = output;
+    render::log = output;
 
     create_rhi(rhi);
     rhi.enumerate_adapters(adapters, 1);

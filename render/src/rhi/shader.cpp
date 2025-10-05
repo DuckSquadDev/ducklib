@@ -12,29 +12,36 @@ void compile_shader(const wchar_t* filename, ShaderType shader_type, const char*
     auto d = std::filesystem::current_path();
 
 #ifndef NDEBUG
-    DL_CHECK_D3D(D3DCompileFromFile(
+    auto result = D3DCompileFromFile(
         filename,
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         entry_point,
         shader_target,
-        D3DCOMPILE_DEBUG,
+        D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
         0,
         &code_blob,
-        &errors));
+        &errors);
+
+    if (FAILED(result)) {
+        // TODO: Add formatted HRESULT message to log output
+        log(static_cast<const char*>(errors->GetBufferPointer()), LogLevel::ERROR, std::source_location::current());
+    }
 #else
-    DL_CHECK_D3D(D3DCompileFromFile(
-        filename,
-        nullptr,
-        D3D_COMPILE_STANDARD_FILE_INCLUDE,
-        entry_point,
-        shader_target,
-        0,
-        0,
-        &code_blob,
-        &errors));
+    if (FAILED(
+        D3DCompileFromFile(
+            filename,
+            nullptr,
+            D3D_COMPILE_STANDARD_FILE_INCLUDE,
+            entry_point,
+            shader_target,
+            0,
+            0,
+            &code_blob,
+            &errors))) {
+        log(static_cast<const char*>(errors->GetBufferPointer()), LogLevel::ERROR, std::source_location::current());
 #endif
-    
+
     shader_out->d3d_bytecode_blob = code_blob;
     shader_out->type = shader_type;
 }

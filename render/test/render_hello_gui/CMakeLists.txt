@@ -25,3 +25,13 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         "${CMAKE_CURRENT_SOURCE_DIR}/shaders.hlsl"
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/shaders.hlsl"
         COMMENT "Copying shaders.hlsl to executable directory")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/gui_shaders.hlsl"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/gui_shaders.hlsl"
+        COMMENT "Copying gui_shaders.hlsl to executable directory")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/text_shaders.hlsl"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/text_shaders.hlsl"
+        COMMENT "Copying text_shaders.hlsl to executable directory")
