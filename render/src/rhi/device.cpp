@@ -329,6 +329,17 @@ void Device::create_pso(const BindingSet& binding_set, const PsoDesc& pso_desc, 
 
     for (uint32_t i = 0; i < pso_desc.rt_count; ++i) {
         d3d12_pso_desc.RTVFormats[i] = to_d3d12_format(pso_desc.rt_formats[i]);
+
+        d3d12_pso_desc.BlendState.RenderTarget[i].BlendEnable = pso_desc.blend.rts[i].blend_enable;
+        d3d12_pso_desc.BlendState.RenderTarget[i].LogicOpEnable = pso_desc.blend.rts[i].logic_op_enable;
+        d3d12_pso_desc.BlendState.RenderTarget[i].SrcBlend = to_d3d12_blend(pso_desc.blend.rts[i].source_blend);
+        d3d12_pso_desc.BlendState.RenderTarget[i].DestBlend = to_d3d12_blend(pso_desc.blend.rts[i].dest_blend);
+        d3d12_pso_desc.BlendState.RenderTarget[i].BlendOp = to_d3d12_blend_op(pso_desc.blend.rts[i].blend_op);
+        d3d12_pso_desc.BlendState.RenderTarget[i].SrcBlendAlpha = to_d3d12_blend(pso_desc.blend.rts[i].source_blend_alpha);
+        d3d12_pso_desc.BlendState.RenderTarget[i].DestBlendAlpha = to_d3d12_blend(pso_desc.blend.rts[i].dest_blend_alpha);
+        d3d12_pso_desc.BlendState.RenderTarget[i].BlendOpAlpha = to_d3d12_blend_op(pso_desc.blend.rts[i].blend_op_alpha);
+        d3d12_pso_desc.BlendState.RenderTarget[i].LogicOp = to_d3d12_logic_op(pso_desc.blend.rts[i].logic_op);
+        d3d12_pso_desc.BlendState.RenderTarget[i].RenderTargetWriteMask = pso_desc.blend.rts[i].rt_write_mask;
     }
 
     d3d12_pso_desc.DSVFormat = to_d3d12_format(pso_desc.ds_format);

@@ -14,6 +14,8 @@
 using Microsoft::WRL::ComPtr;
 
 namespace ducklib::render {
+constexpr auto MAX_RT_COUNT = 8;
+
 struct Adapter {
     ComPtr<IDXGIAdapter1> dxgi_adapter = nullptr;
     char name[128] = {};
@@ -169,6 +171,23 @@ struct RasterizerDesc {
     bool msaa = false;
 };
 
+struct RtBlendDesc {
+    bool blend_enable = false;
+    bool logic_op_enable = false;
+    Blend source_blend = Blend::ONE;
+    Blend dest_blend = Blend::ZERO;
+    BlendOp blend_op = BlendOp::ADD;
+    Blend source_blend_alpha = Blend::ONE;
+    Blend dest_blend_alpha = Blend::ZERO;
+    BlendOp blend_op_alpha = BlendOp::ADD;
+    LogicOp logic_op = LogicOp::NOOP;
+    uint8_t rt_write_mask = D3D12_COLOR_WRITE_ENABLE_ALL;
+};
+
+struct BlendDesc {
+    RtBlendDesc rts[MAX_RT_COUNT];
+};
+
 struct DepthStencilDesc {
     DepthComparison depth_comparison = DepthComparison::LTEQ;
     uint8_t stencil_read_mask = 0xff;
@@ -200,10 +219,11 @@ struct PsoDesc {
     Shader* hull_shader = nullptr;
     Shader* domain_shader = nullptr;
     RasterizerDesc rasterizer;
+    BlendDesc blend;
     DepthStencilDesc depth_stencil;
     InputLayout input_layout;
     uint32_t rt_count;
-    Format rt_formats[8];
+    Format rt_formats[MAX_RT_COUNT];
     Format ds_format;
     PrimitiveTopology primitive_topology = PrimitiveTopology::TRIANGLE;
 };

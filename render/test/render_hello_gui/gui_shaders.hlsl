@@ -1,8 +1,6 @@
 cbuffer stuff : register(b0) {
     float2 screen_size;
 };
-//Texture2D atlas : register(t0);
-//SamplerState samp : register(s0);
 
 struct VsInput {
     float2 position : POSITION;
@@ -25,6 +23,5 @@ PsInput vs_main(VsInput input) {
 }
 
 float4 ps_main(PsInput input) : SV_TARGET {
-    //return atlas.Sample(samp, input.uv);
     return float4(0.3f, 0.3f, 0.3f, 1.0f);
 }

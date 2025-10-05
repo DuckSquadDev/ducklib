@@ -1,7 +1,7 @@
 {
     "rdocCaptureSettings": 1,
     "settings": {
-        "autoStart": false,
+        "autoStart": true,
         "commandLine": "",
         "environment": [
         ],
@@ -13,7 +13,7 @@
             "allowVSync": true,
             "apiValidation": true,
             "captureAllCmdLists": true,
-            "captureCallstacks": false,
+            "captureCallstacks": true,
             "captureCallstacksOnlyDraws": false,
             "debugOutputMute": true,
             "delayForDebugger": 0,

@@ -143,6 +143,54 @@ enum class Filter {
     MIN_MAG_MIP_LINEAR
 };
 
+enum class Blend {
+    ZERO,
+    ONE,
+    SOURCE_COLOR,
+    INV_SOURCE_COLOR,
+    SOURCE_ALPHA,
+    INV_SOURCE_ALPHA,
+    DEST_COLOR,
+    INV_DEST_COLOR,
+    DEST_ALPHA,
+    INV_DEST_ALPHA
+};
+
+enum class BlendOp {
+    ADD,
+    SUIBTRACT,
+    REV_SUBTRACT,
+    MIN,
+    MAX
+};
+
+enum class LogicOp {
+    CLEAR,
+    SET,
+    COPY,
+    COPY_INV,
+    NOOP,
+    INVERT,
+    AND,
+    NAND,
+    OR,
+    NOR,
+    XOR,
+    EQ,
+    AND_REV,
+    AND_INV,
+    OR_REV,
+    OR_INV
+};
+
+// enum RtWriteMask {
+//     RED = 1,
+//     GREEN = 2,
+//     BLUE = 4,
+//     ALPHA = 8,
+//     ALL = 15
+// };
+
 enum class Format : uint32_t {
     UNKNOWN = 0,
     R32G32B32A32_TYPELESS,
@@ -451,6 +499,55 @@ inline auto to_d3d_primitive_topology(PrimitiveTopology topology) -> D3D_PRIMITI
 inline auto to_d3d12_filter(Filter filter) -> D3D12_FILTER {
     switch (filter) {
     case Filter::MIN_MAG_MIP_LINEAR: return D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+    }
+    std::abort();
+}
+
+inline auto to_d3d12_blend(Blend blend) -> D3D12_BLEND {
+    switch (blend) {
+    case Blend::ZERO: return D3D12_BLEND_ZERO;
+    case Blend::ONE: return D3D12_BLEND_ONE;
+    case Blend::SOURCE_COLOR: return D3D12_BLEND_SRC_COLOR;
+    case Blend::INV_SOURCE_COLOR: return D3D12_BLEND_INV_SRC_COLOR;
+    case Blend::SOURCE_ALPHA: return D3D12_BLEND_SRC_ALPHA;
+    case Blend::INV_SOURCE_ALPHA: return D3D12_BLEND_INV_SRC_ALPHA;
+    case Blend::DEST_COLOR: return D3D12_BLEND_DEST_COLOR;
+    case Blend::INV_DEST_COLOR: return D3D12_BLEND_INV_DEST_COLOR;
+    case Blend::INV_DEST_ALPHA: return D3D12_BLEND_INV_DEST_ALPHA;
+    case Blend::DEST_ALPHA: return D3D12_BLEND_DEST_ALPHA;
+    }
+    std::abort();
+}
+
+inline auto to_d3d12_blend_op(BlendOp op) -> D3D12_BLEND_OP {
+    switch (op) {
+    case BlendOp::ADD: return D3D12_BLEND_OP_ADD;
+    case BlendOp::SUIBTRACT: return D3D12_BLEND_OP_SUBTRACT;
+    case BlendOp::REV_SUBTRACT: return D3D12_BLEND_OP_REV_SUBTRACT;
+    case BlendOp::MIN: return D3D12_BLEND_OP_MIN;
+    case BlendOp::MAX: return D3D12_BLEND_OP_MAX;
+    }
+    std::abort();
+}
+
+inline auto to_d3d12_logic_op(LogicOp op) -> D3D12_LOGIC_OP {
+    switch (op) {
+    case LogicOp::CLEAR: return D3D12_LOGIC_OP_CLEAR;
+    case LogicOp::SET: return D3D12_LOGIC_OP_SET;
+    case LogicOp::COPY: return D3D12_LOGIC_OP_COPY;
+    case LogicOp::COPY_INV: return D3D12_LOGIC_OP_COPY_INVERTED;
+    case LogicOp::NOOP: return D3D12_LOGIC_OP_NOOP;
+    case LogicOp::INVERT: return D3D12_LOGIC_OP_INVERT;
+    case LogicOp::AND: return D3D12_LOGIC_OP_AND;
+    case LogicOp::NAND: return D3D12_LOGIC_OP_NAND;
+    case LogicOp::OR: return D3D12_LOGIC_OP_OR;
+    case LogicOp::NOR: return D3D12_LOGIC_OP_NOR;
+    case LogicOp::XOR: return D3D12_LOGIC_OP_XOR;
+    case LogicOp::EQ: return D3D12_LOGIC_OP_EQUIV;
+    case LogicOp::AND_REV: return D3D12_LOGIC_OP_AND_REVERSE;
+    case LogicOp::AND_INV: return D3D12_LOGIC_OP_AND_INVERTED;
+    case LogicOp::OR_REV: return D3D12_LOGIC_OP_OR_REVERSE;
+    case LogicOp::OR_INV: return D3D12_LOGIC_OP_OR_INVERTED;
     }
     std::abort();
 }

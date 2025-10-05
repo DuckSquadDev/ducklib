@@ -103,11 +103,11 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     device.create_fence(0, copy_fence);
 
     rhi.create_swap_chain(queue, width, height, render::Format::R8G8B8A8_UNORM, window.hwnd(), swap_chain);
-    rt_descriptors[0] = { .cpu_handle = rt_descriptor_heap.cpu_handle(0) };
+    rt_descriptors[0] = rt_descriptor_heap.allocate();
     swap_chain.d3d12_swap_chain->GetBuffer(0, IID_PPV_ARGS(&back_buffer));
     device.create_rt_descriptor(back_buffer, nullptr, rt_descriptors[0]);
     back_buffer->Release();
-    rt_descriptors[1] = { .cpu_handle = rt_descriptor_heap.cpu_handle(1) };
+    rt_descriptors[1] = rt_descriptor_heap.allocate();
     swap_chain.d3d12_swap_chain->GetBuffer(1, IID_PPV_ARGS(&back_buffer));
     device.create_rt_descriptor(back_buffer, nullptr, rt_descriptors[1]);
     back_buffer->Release();
@@ -196,9 +196,12 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     text_pso_desc.rt_count = 1;
     text_pso_desc.rt_formats[0] = render::Format::R8G8B8A8_UNORM;
     text_pso_desc.rasterizer.clip_depth = false;
+    text_pso_desc.blend.rts[0].blend_enable = true;
+    text_pso_desc.blend.rts[0].source_blend = render::Blend::SOURCE_ALPHA;
+    text_pso_desc.blend.rts[0].dest_blend = render::Blend::INV_SOURCE_ALPHA;
     device.create_pso(gui_binding_set, text_pso_desc, text_pso);
 
-    auto atlas_info = render::generate_glyph_atlas(0x30, 0x7e, "Roboto-Regular.ttf", 24);
+    auto atlas_info = render::generate_glyph_atlas(0x30, 0x7e, "Roboto-Regular.ttf", 36);
     device.create_texture(atlas_info.width, atlas_info.height, render::Format::R8_UNORM, atlas_texture);
     device.create_buffer(upload_buffer_size, upload_buffer, render::HeapType::UPLOAD);
     std::byte* mapped_upload_buffer;

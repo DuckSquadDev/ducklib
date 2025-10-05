@@ -77,9 +77,11 @@ GlyphAtlasInfo generate_glyph_atlas(int codepoint_start, int codepoint_end, std:
             max_glyph_height = height;
         }
 
-        if (caret_pos + 2 * glyph_padding + width > atlas_width) {
+        if (caret_pos + width + 2 * glyph_padding > atlas_width) {
             rows_required++;
             caret_pos = width + 2 * glyph_padding;
+        } else {
+            caret_pos += width + glyph_padding;
         }
 
         GlyphInfo glyph_entry = {
@@ -121,7 +123,7 @@ GlyphAtlasInfo generate_glyph_atlas(int codepoint_start, int codepoint_end, std:
             scale,
             i);
 
-        if (caret_x + glyph_info.width > atlas_width + glyph_padding) {
+        if (caret_x + glyph_info.width + glyph_padding > atlas_width) {
             caret_x = glyph_padding;
             caret_y += max_glyph_height + glyph_padding;
         }

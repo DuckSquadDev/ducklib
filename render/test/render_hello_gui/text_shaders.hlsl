@@ -25,6 +25,7 @@ PsInput vs_main(VsInput input) {
 }
 
 float4 ps_main(PsInput input) : SV_TARGET {
-    return atlas.Sample(samp, input.uv);
-    //return float4(1.0f, 0.0f, 0.0f, 1.0f);
+    float4 glyph_sample = atlas.Sample(samp, input.uv);
+    return float4(0.4f, 0.7f, 0.0f, glyph_sample.x);
+    //return atlas.Sample(samp, input.uv);
 }
