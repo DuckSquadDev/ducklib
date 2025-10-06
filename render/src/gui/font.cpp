@@ -5,7 +5,8 @@
 #define STB_TRUETYPE_IMPLEMENTATION
 
 #include "../lib/stb_truetype.h"
-#include "render/font.h"
+#include "render/gui/font.h"
+#include "render/gui/gui.h"
 
 namespace ducklib::render {
 constexpr char32_t FONT_MISSING_CODEPOINT = 0xfffc;
@@ -227,22 +228,18 @@ GlyphAtlasInfo generate_glyph_atlas(int codepoint_start, int codepoint_end, std:
     };
 }
 
-void generate_text_quads(
+uint32_t generate_text_quads(
     const GlyphAtlasInfo& atlas,
     std::string_view text,
     int x,
     int y,
-    std::byte* vertex_buffer,
+    gui::GuiVertex* vertex_buffer,
     uint32_t vertex_buffer_size) {
-    struct GlyphVertex {
-        float x, y;
-        float u, v;
-    };
 
-    constexpr auto glyph_stride = 6 * sizeof(GlyphVertex);
+    constexpr auto glyph_stride = 6 * sizeof(gui::GuiVertex);
     auto caret_x = x;
     auto caret_y = y + atlas.ascent; // TODO: Fix y-offset (y is top-left of element, probably, which is bad here)
-    auto vertices = reinterpret_cast<GlyphVertex*>(vertex_buffer);
+    auto quads_generated = 0;
 
     if (text.length() * glyph_stride > vertex_buffer_size) {
         // TODO: Handle error better
@@ -266,14 +263,17 @@ void generate_text_quads(
         auto y0 = static_cast<float>(caret_y - glyph_info.height);
         auto y1 = static_cast<float>(caret_y);
 
-        vertices[i * 6 + 0] = GlyphVertex{ x0, y0, glyph_info.u0, glyph_info.v0 };
-        vertices[i * 6 + 1] = GlyphVertex{ x1, y0, glyph_info.u1, glyph_info.v0 };
-        vertices[i * 6 + 2] = GlyphVertex{ x0, y1, glyph_info.u0, glyph_info.v1 };
-        vertices[i * 6 + 3] = GlyphVertex{ x0, y1, glyph_info.u0, glyph_info.v1 };
-        vertices[i * 6 + 4] = GlyphVertex{ x1, y0, glyph_info.u1, glyph_info.v0 };
-        vertices[i * 6 + 5] = GlyphVertex{ x1, y1, glyph_info.u1, glyph_info.v1 };
+        vertex_buffer[i * 6 + 0] = gui::GuiVertex { x0, y0, glyph_info.u0, glyph_info.v0 };
+        vertex_buffer[i * 6 + 1] = gui::GuiVertex { x1, y0, glyph_info.u1, glyph_info.v0 };
+        vertex_buffer[i * 6 + 2] = gui::GuiVertex { x0, y1, glyph_info.u0, glyph_info.v1 };
+        vertex_buffer[i * 6 + 3] = gui::GuiVertex { x0, y1, glyph_info.u0, glyph_info.v1 };
+        vertex_buffer[i * 6 + 4] = gui::GuiVertex { x1, y0, glyph_info.u1, glyph_info.v0 };
+        vertex_buffer[i * 6 + 5] = gui::GuiVertex { x1, y1, glyph_info.u1, glyph_info.v1 };
 
         caret_x += glyph_info.x_advance;
+        ++quads_generated;
     }
+
+    return quads_generated;
 }
 }

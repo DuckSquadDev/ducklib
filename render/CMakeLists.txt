@@ -25,9 +25,11 @@ add_library(${PROJECT_NAME} STATIC
         src/rhi/shader.cpp
         src/rhi/types.cpp
         ../include/render/render_util.h
-        ../include/render/font.h
-        src/font.cpp
-        src/render_util.cpp)
+        ../include/render/gui/font.h
+        src/gui/font.cpp
+        src/render_util.cpp
+        ../include/render/gui/gui.h
+        src/gui/gui.cpp)
 
 target_compile_options(${PROJECT_NAME} PRIVATE
         $<$<CONFIG:Debug>:/Zi /Od>

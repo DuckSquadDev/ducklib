@@ -4,7 +4,7 @@
 
 #include "core/win/win_app_window.h"
 #include "math/math.h"
-#include "render/font.h"
+#include "../../../include/render/gui/font.h"
 #include "render/render_util.h"
 #include "render/resource_manager.h"
 #include "render/rhi/rhi.h"
@@ -218,7 +218,7 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     upload_buffer.unmap();
 
     device.create_buffer(tv_buffer_size, tv_buffer, render::HeapType::UPLOAD);
-    std::byte* mapped_tv_buffer = nullptr;
+    gui::GuiVertex* mapped_tv_buffer = nullptr;
     tv_buffer.map(reinterpret_cast<void**>(&mapped_tv_buffer));
     generate_text_quads(atlas_info, test_string, 10, 10, mapped_tv_buffer, tv_buffer_size);
     tv_buffer.unmap();
