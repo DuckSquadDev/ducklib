@@ -12,7 +12,7 @@ void draw_rect(GuiState& gui_state, Rect rect) {
 
 void draw_label(GuiState& gui_state, Rect rect, std::string_view text) {
     submit_rect_vertices(gui_state, rect);
-    
+
     auto remaining_text_vertices = GuiState::TEXT_BUFFER_SIZE - gui_state.text_staged_count;
     auto quads_rendered = render::generate_text_quads(
         default_font,
@@ -22,6 +22,28 @@ void draw_label(GuiState& gui_state, Rect rect, std::string_view text) {
         &gui_state.text_staging_buffer[gui_state.text_staged_count],
         remaining_text_vertices);
     gui_state.shape_staged_count += quads_rendered * 6;
+}
+
+void draw_edit(GuiState& gui_state, Rect rect, std::span<char> text_buffer) {
+    auto id = gui_state.id_counter++;
+
+    if (gui_state.focused_id == id) {
+        // TODO: Consume inputs
+    }
+
+    submit_rect_vertices(gui_state, rect);
+
+    auto remaining_text_vertices = GuiState::TEXT_BUFFER_SIZE - gui_state.text_staged_count;
+    auto quads_rendered = render::generate_text_quads(
+        default_font,
+        std::string_view{ text_buffer },
+        rect.x,
+        rect.y,
+        &gui_state.text_staging_buffer[gui_state.text_staged_count],
+        remaining_text_vertices);
+    gui_state.shape_staged_count += quads_rendered * 6;
+
+    // TODO: Check mouse click for focus
 }
 
 void submit_rect_vertices(GuiState& gui_state, Rect rect) {
