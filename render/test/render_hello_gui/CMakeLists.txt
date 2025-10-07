@@ -16,7 +16,8 @@ target_compile_options(${PROJECT_NAME} PRIVATE
 target_include_directories(${PROJECT_NAME} PRIVATE ../../../include)
 link_directories(${CMAKE_SOURCE_DIR}/dir)
 target_link_libraries(${PROJECT_NAME}
-        ducklib-render)
+        ducklib-render
+        ducklib-input)
 
 set(SOURCE_FILE "${CMAKE_SOURCE_DIR}shaders.hlsl")
 

@@ -1,5 +1,6 @@
 #ifndef APP_WINDOW_H
 #define APP_WINDOW_H
+#include <functional>
 
 namespace ducklib {
 class AppWindow {

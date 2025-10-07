@@ -16,10 +16,14 @@ public:
     auto is_open() const -> bool override;
     auto type() const -> Type override;
 
+    void register_message_callback(std::function<void(uint32_t, WPARAM, LPARAM)> callback);
+    void process_message_callbacks(uint32_t msg, WPARAM w_param, LPARAM l_param);
+
     auto hwnd() const -> HWND;
 
 private:
     HWND window_handle;
+    std::vector<std::function<void(uint32_t, WPARAM, LPARAM)>> message_callbacks;
 
     static bool class_initialized;
     static constexpr auto DEFAULT_WINDOW_CLASS_NAME = "WinAppWindow";

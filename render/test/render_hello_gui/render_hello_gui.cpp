@@ -5,6 +5,8 @@
 #include "core/win/win_app_window.h"
 #include "math/math.h"
 #include "../../../include/render/gui/font.h"
+#include "core/unicode.h"
+#include "input/input.h"
 #include "render/render_util.h"
 #include "render/resource_manager.h"
 #include "render/rhi/rhi.h"
@@ -32,6 +34,19 @@ void output(std::string_view message, LogLevel level, std::source_location sourc
 }
 
 int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char* cmdLine, int cmdShow) {
+    // TEST
+    auto v00 = utf16_to_cp(u"\U00000041", 1);
+    auto v01 = utf16_to_cp(u"\U000020ac", 3);
+    auto v02 = utf16_to_cp(u"\U000000a9", 2);
+    auto v03 = utf16_to_cp(u"\U000003a9", 2);
+    auto v04 = utf16_to_cp(u"\U00003042", 3);
+    auto v05 = utf16_to_cp(u"\U000000df", 2);
+    auto v06 = utf16_to_cp(u"\U00000f40", 3);
+    auto v07 = utf16_to_cp(u"\U0001F30D", 4);
+    auto v08 = utf16_to_cp(u"\U0001d518", 4);
+    auto v09 = utf16_to_cp(u"\U0001f603", 4);
+    auto v10 = utf16_to_cp(u"\U00010348", 4);
+    // /TEST
     WinAppWindow window{ "Hello world!", width, height };
     render::Rhi rhi = {};
     render::SwapChain swap_chain = {};
@@ -60,6 +75,12 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     ID3D12Resource* back_buffer = nullptr;
 
     render::log = output;
+    InputState input_state = {};
+    register_raw_win_input();
+    window.register_message_callback(
+        [&input_state] (uint32_t msg, WPARAM wParam, LPARAM lParam) {
+            process_win_input(input_state, msg, wParam, lParam);
+        });
 
     create_rhi(rhi);
     rhi.enumerate_adapters(adapters, 1);
@@ -232,9 +253,9 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
 
     copy_list.reset();
     copy_list.resource_barrier(
-            atlas_texture.d3d12_resource,
-            render::ResourceState::COMMON,
-            render::ResourceState::COPY_DEST);
+        atlas_texture.d3d12_resource,
+        render::ResourceState::COMMON,
+        render::ResourceState::COPY_DEST);
     copy_list.copy_texture(atlas_texture, 0, 0, upload_buffer);
     copy_list.resource_barrier(
         atlas_texture.d3d12_resource,
@@ -310,6 +331,8 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     binding_set.d3d12_signature->Release();
     pixel_shader.d3d_bytecode_blob->Release();
     vertex_shader.d3d_bytecode_blob->Release();
+
+    unregister_raw_win_input();
 
     return 0;
 }
