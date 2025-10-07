@@ -34,19 +34,6 @@ void output(std::string_view message, LogLevel level, std::source_location sourc
 }
 
 int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char* cmdLine, int cmdShow) {
-    // TEST
-    auto v00 = utf16_to_cp(u"\U00000041", 1);
-    auto v01 = utf16_to_cp(u"\U000020ac", 3);
-    auto v02 = utf16_to_cp(u"\U000000a9", 2);
-    auto v03 = utf16_to_cp(u"\U000003a9", 2);
-    auto v04 = utf16_to_cp(u"\U00003042", 3);
-    auto v05 = utf16_to_cp(u"\U000000df", 2);
-    auto v06 = utf16_to_cp(u"\U00000f40", 3);
-    auto v07 = utf16_to_cp(u"\U0001F30D", 4);
-    auto v08 = utf16_to_cp(u"\U0001d518", 4);
-    auto v09 = utf16_to_cp(u"\U0001f603", 4);
-    auto v10 = utf16_to_cp(u"\U00010348", 4);
-    // /TEST
     WinAppWindow window{ "Hello world!", width, height };
     render::Rhi rhi = {};
     render::SwapChain swap_chain = {};

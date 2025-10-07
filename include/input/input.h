@@ -1,12 +1,12 @@
 #ifndef DUCKLIB_INPUT_H
 #define DUCKLIB_INPUT_H
+#include <vector>
 
 namespace ducklib {
 struct InputState {
     static constexpr auto MAX_TEXT_INPUTS = 128;
 
-    char text_inputs[MAX_TEXT_INPUTS];
-    int text_input_count = 0;
+    std::vector<char8_t> text_inputs;
     int mouse_x, mouse_y;
     
     bool mouse_buttons[5];
