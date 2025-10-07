@@ -42,4 +42,35 @@ char32_t utf8_to_cp(const char8_t* str, uint32_t byte_len) {
         | cp2 << shift[len + 3 - 3]
         | cp3 << shift[len + 3 - 4];
 }
+
+uint8_t cp_to_utf8(char32_t cp, char8_t* str, uint32_t buffer_len) {
+    if (cp < 0x80) {
+        str[0] = static_cast<char8_t>(cp);
+        return 1;
+    } else if (cp < 0x800) {
+        if (buffer_len < 2) {
+            return 0;
+        }
+        str[0] = 0xc0 | (cp >> 6) & 0x7f;
+        str[1] = 0x80 | cp & 0x3f;
+        return 2;
+    } else if (cp < 0x10000) {
+        if (buffer_len < 2) {
+            return 0;
+        }
+        str[0] = 0xe0 | (cp >> 12) & 0x1f;
+        str[1] = 0x80 | (cp >> 6) & 0x3f;
+        str[2] = 0x80 | cp & 0x3f;
+        return 3;
+    } else {
+        if (buffer_len < 2) {
+            return 0;
+        }
+        str[0] = 0xf0 | (cp >> 18) & 0x0f;
+        str[1] = 0x80 | (cp >> 12) & 0x1f;
+        str[2] = 0x80 | (cp >> 6) & 0x3f;
+        str[3] = 0x80 | cp & 0x3f;
+        return 4;
+    }
+}
 }
