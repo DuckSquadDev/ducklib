@@ -11,6 +11,8 @@ using Microsoft::WRL::ComPtr;
 namespace ducklib::render {
 struct Device {
     ComPtr<ID3D12Device2> d3d12_device;
+    CommandQueue graphics_queue;
+    CommandQueue copy_queue;
 
     void create_queue(QueueType type, CommandQueue& out_queue);
     void create_command_list(QueueType queue_type, CommandList& out_list);

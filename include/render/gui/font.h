@@ -29,10 +29,10 @@ struct GlyphAtlasInfo {
     uint32_t space_width;
 };
 
-GlyphAtlasInfo generate_glyph_atlas(int codepoint_start, int codepoint_end, std::string_view font, uint8_t size = 16);
+GlyphAtlasInfo generate_glyph_atlas(int codepoint_start, int codepoint_end, std::u8string_view font, uint8_t size = 16);
 uint32_t generate_text_quads(
     const GlyphAtlasInfo& atlas,
-    std::string_view text,
+    std::u8string_view text,
     int x,
     int y,
     gui::GuiVertex* vertex_buffer,

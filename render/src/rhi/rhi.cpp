@@ -48,6 +48,9 @@ auto Rhi::enumerate_adapters(Adapter* out_adapters, uint32_t max_adapter_count) 
 void Rhi::create_device(const Adapter& adapter, Device& out_device) {
     DL_CHECK_D3D(
         D3D12CreateDevice(adapter.dxgi_adapter.Get(), D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(out_device.d3d12_device.GetAddressOf())));
+    
+    out_device.create_queue(QueueType::GRAPHICS, out_device.graphics_queue);
+    out_device.create_queue(QueueType::COPY, out_device.copy_queue);
 }
 
 void Rhi::create_swap_chain(

@@ -141,9 +141,9 @@ void draw_glyph_and_advance(
     x_caret += glyph_info.width + GLYPH_PADDING;
 }
 
-GlyphAtlasInfo generate_glyph_atlas(int codepoint_start, int codepoint_end, std::string_view font, uint8_t size) {
+GlyphAtlasInfo generate_glyph_atlas(int codepoint_start, int codepoint_end, std::u8string_view font, uint8_t size) {
     // Read font file
-    auto font_file = fopen(font.data(), "rb");
+    auto font_file = fopen(reinterpret_cast<const char*>(font.data()), "rb");
     fseek(font_file, 0, SEEK_END);
     auto font_file_size = ftell(font_file);
     rewind(font_file);
@@ -230,7 +230,7 @@ GlyphAtlasInfo generate_glyph_atlas(int codepoint_start, int codepoint_end, std:
 
 uint32_t generate_text_quads(
     const GlyphAtlasInfo& atlas,
-    std::string_view text,
+    std::u8string_view text,
     int x,
     int y,
     gui::GuiVertex* vertex_buffer,

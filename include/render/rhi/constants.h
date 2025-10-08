@@ -6,7 +6,7 @@
 namespace ducklib::render {
 enum class QueueType {
     GRAPHICS,
-    TRANSFER,
+    COPY,
     COMPUTE
 };
 
@@ -311,7 +311,7 @@ inline auto to_d3d12_queue_type(QueueType type) {
     switch (type) {
     case QueueType::GRAPHICS: return D3D12_COMMAND_LIST_TYPE_DIRECT;
     case QueueType::COMPUTE: return D3D12_COMMAND_LIST_TYPE_COMPUTE;
-    case QueueType::TRANSFER: return D3D12_COMMAND_LIST_TYPE_COPY;
+    case QueueType::COPY: return D3D12_COMMAND_LIST_TYPE_COPY;
     }
     std::abort();
 }
