@@ -1,5 +1,6 @@
 #ifndef DUCKLIB_INPUT_H
 #define DUCKLIB_INPUT_H
+#include <Windows.h>
 #include <vector>
 
 namespace ducklib {

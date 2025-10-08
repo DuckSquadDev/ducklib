@@ -137,13 +137,14 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     render::DescriptorHeap* heaps[] = { &resource_descriptor_heap, &sampler_descriptor_heap };
 
     // New GUI stuff
-    gui::GuiState gui_state = {};
+    auto gui_state = new gui::GuiState();
     std::array<char8_t, 2048> text_buffer;
-    auto text_len = 2u;
+    auto text_bytes = 2u;
     text_buffer[0] = 'h';
     text_buffer[1] = 'i';
 
-    gui::init_gui_state(gui_state, device, width, height, resource_descriptor_heap, sampler_descriptor_heap);
+    gui::init_gui_state(*gui_state, device, width, height, resource_descriptor_heap, sampler_descriptor_heap);
+    gui_state->input_state = &input_state;
 
     while (window.is_open()) {
         window.process_messages();
@@ -158,8 +159,8 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
         render::upload_buffer_data(c_buffer, 2 * sizeof(Matrix4), &rotation, sizeof(rotation));
 
         // New GUI stuff
-        reset_gui_state(gui_state);
-        gui::draw_edit(gui_state, { 10, 200, 200, 30 }, text_buffer, text_len);
+        reset_gui_state(*gui_state);
+        gui::draw_edit(*gui_state, { 10, 200, 200, 30 }, text_buffer, text_bytes);
 
         // Triangle rendering
         command_list.reset(&pso);
@@ -175,7 +176,7 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
         command_list.draw(3, 0);
 
         // GUI rendering
-        draw_gui_state(gui_state, command_list, heaps);
+        draw_gui_state(*gui_state, command_list, heaps);
 
         command_list.resource_barrier(rt_buffer, render::ResourceState::RENDER_TARGET, render::ResourceState::PRESENT);
         command_list.close();
@@ -190,6 +191,8 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
 
         std::this_thread::sleep_for(std::chrono::milliseconds(16));
     }
+
+    delete gui_state;
 
     c_buffer.d3d12_resource->Release();
     fence.d3d12_fence->Release();

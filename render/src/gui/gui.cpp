@@ -27,11 +27,28 @@ void draw_label(GuiState& gui_state, Rect rect, std::u8string_view text) {
     gui_state.shape_staged_vertex_count += quads_rendered * 6;
 }
 
-void draw_edit(GuiState& gui_state, Rect rect, std::span<char8_t> text_buffer, uint32_t& text_len) {
+bool mouse_clicks_rect(InputState& input_state, Rect rect) {
+    auto x = input_state.mouse_x;
+    auto y = input_state.mouse_y;
+    
+    if (rect.x <= x && x <= rect.x + rect.width
+        && rect.y <= y && y <= rect.y + rect.height) {
+        return true;
+    }
+
+    return false;
+}
+
+void draw_edit(GuiState& gui_state, Rect rect, std::span<char8_t> text_buffer, uint32_t& text_bytes) {
     auto id = gui_state.id_counter++;
 
     if (gui_state.focused_id == id) {
-        // TODO: Consume inputs
+        if (gui_state.input_state) {
+            auto text_input_bytes = gui_state.input_state->text_inputs.size();
+            memcpy(&text_buffer[text_bytes], gui_state.input_state->text_inputs.data(), text_input_bytes);
+            gui_state.input_state->text_inputs.clear();
+            text_bytes += text_input_bytes;
+        }
     }
 
     submit_rect_vertices(gui_state, rect);
@@ -39,14 +56,19 @@ void draw_edit(GuiState& gui_state, Rect rect, std::span<char8_t> text_buffer, u
     auto remaining_text_vertices = GuiState::TEXT_BUFFER_SIZE - gui_state.text_staged_vertex_count;
     auto quads_rendered = render::generate_text_quads(
         default_font,
-        std::u8string_view{ text_buffer.data(), text_len },
+        std::u8string_view{ text_buffer.data(), text_bytes },
         rect.x,
         rect.y,
         &gui_state.text_staging_vbuffer[gui_state.text_staged_vertex_count],
         remaining_text_vertices);
     gui_state.text_staged_vertex_count += quads_rendered * 6;
 
-    // TODO: Check mouse click for focus
+    if (gui_state.input_state) {
+        auto* input = gui_state.input_state;
+        if (mouse_clicks_rect(*input, rect)) {
+            gui_state.focused_id = id;
+        }
+    }
 }
 
 void create_glyph_atlas_texture(

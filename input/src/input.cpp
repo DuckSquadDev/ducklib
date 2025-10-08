@@ -17,7 +17,11 @@ void process_win_input(InputState& input_state, uint32_t msg, WPARAM wParam, LPA
         input_state.text_inputs.append_range(std::span(text_buffer, code_units));
         break;
     }
-    case WM_MOUSEMOVE: break;
+    case WM_MOUSEMOVE: {
+        input_state.mouse_x = lParam & 0xffff;
+        input_state.mouse_y = (lParam >> 16) & 0xffff;
+        break;
+    }
     case WM_LBUTTONDOWN: break;
     case WM_KEYDOWN: break;
     }
