@@ -1,5 +1,6 @@
 #include "render/gui/gui.h"
 
+#include "core/unicode.h"
 #include "render/resource_manager.h"
 #include "render/gui/font.h"
 #include "render/rhi/shader.h"
@@ -39,15 +40,40 @@ bool mouse_clicks_rect(InputState& input_state, Rect rect) {
     return false;
 }
 
+void modify_text_from_input(std::span<char8_t> text_buffer, uint32_t& text_bytes, std::span<char8_t> inputs) {
+    auto text_input_bytes = inputs.size();
+
+    for (auto i = 0; i < text_input_bytes;) {
+        switch (inputs[i]) {
+        case 0x8: {
+            // Backspace
+            if (text_bytes == 0) {
+                ++i;
+                continue;
+            }
+            auto move_back = prev_utf8(&text_buffer[text_bytes - 1], text_bytes - 1);
+            text_bytes -= move_back + 1; // + 1 as the move_back doesn't include the step back we did above when finding the start of the code point
+            ++i;
+            break;
+        }
+        default: {
+            auto code_units = utf8_ch_size(&inputs[i], text_input_bytes - (i + 1));
+            memcpy(&text_buffer[text_bytes], &inputs[i], code_units);
+            text_bytes += code_units;
+            i += code_units;
+            break;
+        }
+        }
+    }
+}
+
 void draw_edit(GuiState& gui_state, Rect rect, std::span<char8_t> text_buffer, uint32_t& text_bytes) {
     auto id = gui_state.id_counter++;
 
     if (gui_state.focused_id == id) {
         if (gui_state.input_state) {
-            auto text_input_bytes = gui_state.input_state->text_inputs.size();
-            memcpy(&text_buffer[text_bytes], gui_state.input_state->text_inputs.data(), text_input_bytes);
+            modify_text_from_input(text_buffer, text_bytes, gui_state.input_state->text_inputs);
             gui_state.input_state->text_inputs.clear();
-            text_bytes += text_input_bytes;
         }
     }
 

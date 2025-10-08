@@ -1,6 +1,7 @@
-#include "core/unicode.h"
-
+#include <cmath>
 #include <cstring>
+
+#include "core/unicode.h"
 
 namespace ducklib {
 char32_t utf16_to_cp(const char16_t* str, uint32_t word_len) {
@@ -72,5 +73,32 @@ uint8_t cp_to_utf8(char32_t cp, char8_t* str, uint32_t buffer_len) {
         str[3] = 0x80 | cp & 0x3f;
         return 4;
     }
+}
+
+/// @brief Returns the number of bytes to move back to get to the start of the current UTF-8 code point
+/// @param last_byte Pointer to the last byte/code unit of a UTF-8 code point
+/// @param buffer_byte_count The number of bytes in the buffer before the `last_byte` pointer
+int8_t prev_utf8(const char8_t* last_byte, uint32_t buffer_byte_count) {
+    auto bytes_left = buffer_byte_count;
+    auto i = 0;
+    
+    while (bytes_left > 0 && (last_byte[i] & 0xc0) == 0x80) {
+        --bytes_left;
+        --i;
+    }
+
+    return std::abs(i);
+}
+
+/// @brief Returns the number of code units of the current UTF-8 code point. Assumes ptr starts on the first code unit.
+uint8_t utf8_ch_size(const char8_t* first_byte, uint32_t bytes_left) {
+    auto i = 1;
+    
+    while(bytes_left > 0 && (first_byte[i] & 0xc0) == 0x80) {
+        ++i;
+        --bytes_left;
+    }
+
+    return i;
 }
 }
