@@ -7,7 +7,8 @@
 #include "render/rhi/shader.h"
 
 namespace ducklib::gui {
-auto default_font = render::generate_glyph_atlas(0x30, 0x7e, u8"Roboto-Regular.ttf", 24);
+render::GlyphRange default_codepoint_ranges[] = { { 0x21, 0x7e } };
+auto default_font = render::generate_glyph_atlas(default_codepoint_ranges, u8"Roboto-Regular.ttf", 24);
 
 void submit_rect_vertices(GuiState& gui_state, Rect rect, const float color[] = DEF_RECT_COLOR);
 
@@ -123,7 +124,7 @@ void create_glyph_atlas_texture(
 
     constexpr auto upload_buffer_size = 4096 * 4096;
     render::Buffer upload_buffer = {};
-    auto atlas_info = render::generate_glyph_atlas(0x30, 0x7e, u8"Roboto-Regular.ttf", 24);
+    auto atlas_info = render::generate_glyph_atlas(default_codepoint_ranges, u8"Roboto-Regular.ttf", 24);
     device.create_texture(atlas_info.width, atlas_info.height, render::Format::R8_UNORM, gui_state.glyph_atlas_texture);
     device.create_buffer(upload_buffer_size, upload_buffer, render::HeapType::UPLOAD);
     std::byte* mapped_upload_buffer;

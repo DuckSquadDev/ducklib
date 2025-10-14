@@ -140,8 +140,8 @@ void draw_glyph_and_advance(
     x_caret += glyph_info.width + GLYPH_PADDING;
 }
 
-GlyphAtlasInfo generate_glyph_atlas(int codepoint_start, int codepoint_end, std::u8string_view font, uint8_t size) {
-    // Read font file
+GlyphAtlasInfo generate_glyph_atlas(std::span<GlyphRange> codepoint_ranges, std::u8string_view font, uint8_t size) {
+    // Read the font file
     auto font_file = fopen(reinterpret_cast<const char*>(font.data()), "rb");
     fseek(font_file, 0, SEEK_END);
     auto font_file_size = ftell(font_file);
@@ -174,8 +174,10 @@ GlyphAtlasInfo generate_glyph_atlas(int codepoint_start, int codepoint_end, std:
             append_glyph_info(font_info, FONT_MISSING_CODEPOINT, scale, caret_pos, rows_required, max_glyph_height, atlas_width)
         });
 
-    for (auto i = codepoint_start; i <= codepoint_end; ++i) {
-        glyph_infos.insert({ i, append_glyph_info(font_info, i, scale, caret_pos, rows_required, max_glyph_height, atlas_width) });
+    for (auto range : codepoint_ranges) {
+        for (auto i = range.start; i <= range.end; ++i) {
+            glyph_infos.insert({ i, append_glyph_info(font_info, i, scale, caret_pos, rows_required, max_glyph_height, atlas_width) });
+        }
     }
 
     // Second pass: create and render glyphs onto atlas
@@ -199,18 +201,20 @@ GlyphAtlasInfo generate_glyph_atlas(int codepoint_start, int codepoint_end, std:
         x_caret,
         y_caret);
 
-    for (auto i = codepoint_start; i <= codepoint_end; ++i) {
-        draw_glyph_and_advance(
-            font_info,
-            i,
-            scale,
-            atlas_bitmap,
-            atlas_width,
-            atlas_height,
-            max_glyph_height,
-            glyph_infos[i],
-            x_caret,
-            y_caret);
+    for (auto range : codepoint_ranges) {
+        for (auto i = range.start; i <= range.end; ++i) {
+            draw_glyph_and_advance(
+                font_info,
+                i,
+                scale,
+                atlas_bitmap,
+                atlas_width,
+                atlas_height,
+                max_glyph_height,
+                glyph_infos[i],
+                x_caret,
+                y_caret);
+        }
     }
 
     delete[] font_buffer;

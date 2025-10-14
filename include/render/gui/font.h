@@ -1,6 +1,7 @@
 #ifndef DUCKLIB_FONT_H
 #define DUCKLIB_FONT_H
 #include <map>
+#include <span>
 #include <string_view>
 
 namespace ducklib::gui {
@@ -8,6 +9,11 @@ struct GuiVertex;
 }
 
 namespace ducklib::render {
+struct GlyphRange {
+    int start;
+    int end;
+};
+
 struct GlyphInfo {
     float u0, v0;
     float u1, v1;
@@ -29,7 +35,7 @@ struct GlyphAtlasInfo {
     uint32_t space_width;
 };
 
-GlyphAtlasInfo generate_glyph_atlas(int codepoint_start, int codepoint_end, std::u8string_view font, uint8_t size = 16);
+GlyphAtlasInfo generate_glyph_atlas(std::span<GlyphRange> codepoint_ranges, std::u8string_view font, uint8_t size = 16);
 uint32_t generate_text_quads(
     const GlyphAtlasInfo& atlas,
     std::u8string_view text,
