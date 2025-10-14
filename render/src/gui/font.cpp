@@ -69,13 +69,12 @@ GlyphInfo append_glyph_info(
     }
 
     return {
-        0.0f,
-        // temp UV coords
+        0.0f, // temp UV coords
         0.0f,
         0.0f,
         0.0f,
         static_cast<int>(left_bearing * scale),
-        static_cast<int>(y0 * scale),
+        y0,
         width,
         height,
         static_cast<int>(advance_width * scale)
@@ -260,8 +259,8 @@ uint32_t generate_text_quads(
         auto& glyph_info = atlas.glyph_infos.at(static_cast<uint32_t>(ch));
         auto x0 = static_cast<float>(caret_x + glyph_info.x_offset);
         auto x1 = static_cast<float>(caret_x + glyph_info.x_offset + glyph_info.width);
-        auto y0 = static_cast<float>(caret_y - glyph_info.height);
-        auto y1 = static_cast<float>(caret_y);
+        auto y0 = static_cast<float>(caret_y + glyph_info.y_offset);
+        auto y1 = static_cast<float>(caret_y + glyph_info.y_offset + glyph_info.height);
 
         float color[] = { 0.4f, 0.7f, 0.0f, 1.0f };
         vertex_buffer[i * 6 + 0] = gui::GuiVertex { x0, y0, glyph_info.u0, glyph_info.v0, color[0], color[1], color[2], color[3] };

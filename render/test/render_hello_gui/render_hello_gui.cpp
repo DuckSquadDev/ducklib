@@ -156,7 +156,7 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
 
         // New GUI stuff
         frame_reset_gui_state(*gui_state);
-        gui::draw_edit(*gui_state, { 0, 0, 200, 30 }, text_buffer, text_bytes);
+        gui::draw_edit(*gui_state, { 40, 20, 200, 30 }, text_buffer, text_bytes);
 
         // Triangle rendering
         command_list.reset(&pso);
