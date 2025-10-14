@@ -44,6 +44,21 @@ void CommandList::set_binding_set(const BindingSet& binding_set) {
     d3d12_list->SetGraphicsRootSignature(binding_set.d3d12_signature);
 }
 
+void CommandList::set_descriptor_heaps(uint32_t heap_count, DescriptorHeap** heaps) {
+    assert(heap_count <= 2);
+    ID3D12DescriptorHeap* d3d12_heaps[2];
+
+    for (auto i = 0; i < heap_count; ++i) {
+        d3d12_heaps[i] = heaps[i]->d3d12_heap;
+    }
+    
+    d3d12_list->SetDescriptorHeaps(heap_count, d3d12_heaps);
+}
+
+void CommandList::set_descriptor_set(uint32_t slot, Descriptor base_descriptor) {
+    d3d12_list->SetGraphicsRootDescriptorTable(slot, base_descriptor.gpu_handle);
+}
+
 void CommandList::set_viewport(float top_left_x, float top_left_y, float width, float height) {
     D3D12_VIEWPORT viewport_desc = {};
 
@@ -84,6 +99,44 @@ void CommandList::draw(uint32_t vertex_count, uint32_t offset) {
     d3d12_list->DrawInstanced(vertex_count, 1, offset, 0);
 }
 
+void CommandList::copy_texture(Texture& dest, uint32_t dest_x, uint32_t dest_y, uint32_t dest_z, const Texture& source) {
+    D3D12_TEXTURE_COPY_LOCATION dest_desc = {};
+    D3D12_TEXTURE_COPY_LOCATION source_desc = {};
+
+    dest_desc.pResource = dest.d3d12_resource;
+    dest_desc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    dest_desc.SubresourceIndex = 0;
+    source_desc.pResource = source.d3d12_resource;
+    source_desc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    source_desc.SubresourceIndex = 0;
+    
+    d3d12_list->CopyTextureRegion(&dest_desc, dest_x, dest_y, dest_z, &source_desc, nullptr);
+}
+
+void CommandList::copy_texture(Texture& dest, uint32_t dest_x, uint32_t dest_y, const Buffer& source) {
+    ComPtr<ID3D12Device2> d3d12_device;
+    D3D12_TEXTURE_COPY_LOCATION dest_desc = {};
+    D3D12_TEXTURE_COPY_LOCATION source_desc = {};
+    D3D12_RESOURCE_DESC dest_resource_desc = dest.d3d12_resource->GetDesc();
+    D3D12_PLACED_SUBRESOURCE_FOOTPRINT upload_buffer_footprint = {};
+    uint32_t row_count;
+    uint64_t row_size;
+    uint64_t total_bytes;
+
+    DL_CHECK_D3D(d3d12_list->GetDevice(IID_PPV_ARGS(&d3d12_device)));
+
+    d3d12_device->GetCopyableFootprints(&dest_resource_desc, 0, 1, 0, &upload_buffer_footprint, &row_count, &row_size, &total_bytes);
+
+    dest_desc.pResource = dest.d3d12_resource;
+    dest_desc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    dest_desc.SubresourceIndex = 0;
+    source_desc.pResource = source.d3d12_resource;
+    source_desc.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+    source_desc.PlacedFootprint = upload_buffer_footprint;
+
+    d3d12_list->CopyTextureRegion(&dest_desc, dest_x, dest_y, 0, &source_desc, nullptr);
+}
+
 void CommandList::set_rt(const Descriptor& rt_descriptor) {
     d3d12_list->OMSetRenderTargets(1, &rt_descriptor.cpu_handle, false, nullptr);
 }
@@ -98,8 +151,8 @@ void CommandList::resource_barrier(void* d3d12_resource, ResourceState start_sta
     barrier_desc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     barrier_desc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
     barrier_desc.Transition.pResource = static_cast<ID3D12Resource*>(d3d12_resource);
-    barrier_desc.Transition.StateBefore = to_d3d12_resource_state(start_state);
-    barrier_desc.Transition.StateAfter = to_d3d12_resource_state(end_state);
+    barrier_desc.Transition.StateBefore = static_cast<D3D12_RESOURCE_STATES>(start_state);
+    barrier_desc.Transition.StateAfter = static_cast<D3D12_RESOURCE_STATES>(end_state);
     barrier_desc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
     d3d12_list->ResourceBarrier(1, &barrier_desc);

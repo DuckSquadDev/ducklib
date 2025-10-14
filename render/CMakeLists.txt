@@ -24,7 +24,12 @@ add_library(${PROJECT_NAME} STATIC
         ../include/render/rhi/shader.h
         src/rhi/shader.cpp
         src/rhi/types.cpp
-        ../include/render/render_util.h)
+        ../include/render/render_util.h
+        ../include/render/gui/font.h
+        src/gui/font.cpp
+        src/render_util.cpp
+        ../include/render/gui/gui.h
+        src/gui/gui.cpp)
 
 target_compile_options(${PROJECT_NAME} PRIVATE
         $<$<CONFIG:Debug>:/Zi /Od>
@@ -43,4 +48,11 @@ target_link_libraries(${PROJECT_NAME}
         dxguid
         d3dcompiler)
 
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/Roboto-Regular.ttf"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/Roboto-Regular.ttf"
+        COMMENT "Copying Roboto-Regular.ttf to executable directory")
+
 add_subdirectory(test/render_hello_triangle)
+add_subdirectory(test/render_hello_gui)

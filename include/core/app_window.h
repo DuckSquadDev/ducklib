@@ -1,5 +1,6 @@
 #ifndef APP_WINDOW_H
 #define APP_WINDOW_H
+#include <functional>
 
 namespace ducklib {
 class AppWindow {
@@ -14,6 +15,9 @@ public:
     virtual auto close() -> void = 0;
     virtual auto is_open() const -> bool = 0;
     virtual auto type() const -> Type = 0;
+
+    virtual auto border_size() const -> uint32_t = 0;
+    virtual auto title_bar_height() const -> uint32_t = 0;
 };
 }
 

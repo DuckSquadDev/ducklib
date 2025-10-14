@@ -46,6 +46,7 @@ void Device::create_descriptor_heap(DescriptorHeapType type, uint32_t count, Des
     out_heap.first_gpu_handle = out_heap.d3d12_heap->GetGPUDescriptorHandleForHeapStart();
     out_heap.descriptor_size = d3d12_device->GetDescriptorHandleIncrementSize(d3d12_heap_type);
     out_heap.type = type;
+    out_heap.count = count;
 }
 
 void Device::create_cbuffer_descriptor(const Buffer& cbuffer, const Descriptor& descriptor) {
@@ -57,6 +58,7 @@ void Device::create_cbuffer_descriptor(const Buffer& cbuffer, const Descriptor& 
     d3d12_device->CreateConstantBufferView(&cbuffer_desc, descriptor.cpu_handle);
 }
 
+// @brief desc is optional
 void Device::create_srv_descriptor(void* resource, const DescriptorDesc* desc, const Descriptor& descriptor) {
     if (desc == nullptr) {
         d3d12_device->CreateShaderResourceView(static_cast<ID3D12Resource*>(resource), nullptr, descriptor.cpu_handle);
@@ -248,6 +250,7 @@ void Device::create_binding_set(const BindingSetDesc& binding_set_desc, BindingS
             d3d12_params[i].ParameterType = to_d3d12_binding_type(binding_set_desc.bindings[i].type);
             d3d12_params[i].DescriptorTable.NumDescriptorRanges = 1;
             d3d12_params[i].DescriptorTable.pDescriptorRanges = &d3d12_descriptor_ranges[i_ranges];
+            d3d12_descriptor_ranges[i_ranges].RangeType = to_d3d12_descriptor_range_type(set_binding.type);
             d3d12_descriptor_ranges[i_ranges].RegisterSpace = set_binding.register_space;
             d3d12_descriptor_ranges[i_ranges].BaseShaderRegister = set_binding.base_shader_register;
             d3d12_descriptor_ranges[i_ranges].NumDescriptors = set_binding.descriptor_count;
@@ -326,6 +329,17 @@ void Device::create_pso(const BindingSet& binding_set, const PsoDesc& pso_desc, 
 
     for (uint32_t i = 0; i < pso_desc.rt_count; ++i) {
         d3d12_pso_desc.RTVFormats[i] = to_d3d12_format(pso_desc.rt_formats[i]);
+
+        d3d12_pso_desc.BlendState.RenderTarget[i].BlendEnable = pso_desc.blend.rts[i].blend_enable;
+        d3d12_pso_desc.BlendState.RenderTarget[i].LogicOpEnable = pso_desc.blend.rts[i].logic_op_enable;
+        d3d12_pso_desc.BlendState.RenderTarget[i].SrcBlend = to_d3d12_blend(pso_desc.blend.rts[i].source_blend);
+        d3d12_pso_desc.BlendState.RenderTarget[i].DestBlend = to_d3d12_blend(pso_desc.blend.rts[i].dest_blend);
+        d3d12_pso_desc.BlendState.RenderTarget[i].BlendOp = to_d3d12_blend_op(pso_desc.blend.rts[i].blend_op);
+        d3d12_pso_desc.BlendState.RenderTarget[i].SrcBlendAlpha = to_d3d12_blend(pso_desc.blend.rts[i].source_blend_alpha);
+        d3d12_pso_desc.BlendState.RenderTarget[i].DestBlendAlpha = to_d3d12_blend(pso_desc.blend.rts[i].dest_blend_alpha);
+        d3d12_pso_desc.BlendState.RenderTarget[i].BlendOpAlpha = to_d3d12_blend_op(pso_desc.blend.rts[i].blend_op_alpha);
+        d3d12_pso_desc.BlendState.RenderTarget[i].LogicOp = to_d3d12_logic_op(pso_desc.blend.rts[i].logic_op);
+        d3d12_pso_desc.BlendState.RenderTarget[i].RenderTargetWriteMask = pso_desc.blend.rts[i].rt_write_mask;
     }
 
     d3d12_pso_desc.DSVFormat = to_d3d12_format(pso_desc.ds_format);
@@ -343,20 +357,19 @@ void Device::create_pso(const BindingSet& binding_set, const PsoDesc& pso_desc, 
 void Device::create_buffer(uint64_t byte_size, Buffer& out_buffer, HeapType heap_type) {
     D3D12_HEAP_PROPERTIES heap_props = {};
     D3D12_RESOURCE_DESC resource_desc = {};
-    D3D12_RESOURCE_STATES init_states = {};
+    D3D12_RESOURCE_STATES init_state = {};
 
     if (heap_type == HeapType::DEFAULT) {
         heap_props.Type = D3D12_HEAP_TYPE_DEFAULT;
-        init_states = D3D12_RESOURCE_STATE_COMMON;
+        init_state = D3D12_RESOURCE_STATE_COMMON;
     } else {
         heap_props.Type = D3D12_HEAP_TYPE_UPLOAD;
-        init_states = D3D12_RESOURCE_STATE_GENERIC_READ;
+        init_state = D3D12_RESOURCE_STATE_GENERIC_READ;
     }
 
     resource_desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    resource_desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    resource_desc.Width = byte_size;
     resource_desc.Format = DXGI_FORMAT_UNKNOWN;
+    resource_desc.Width = byte_size;
     resource_desc.Height = 1;
     resource_desc.DepthOrArraySize = 1;
     resource_desc.MipLevels = 1;
@@ -366,83 +379,52 @@ void Device::create_buffer(uint64_t byte_size, Buffer& out_buffer, HeapType heap
 
     DL_CHECK_D3D(
         d3d12_device->CreateCommittedResource(
-            &heap_props,
-            D3D12_HEAP_FLAG_NONE,
-            &resource_desc,
-            init_states,
-            nullptr,
-            IID_PPV_ARGS(&out_buffer.d3d12_resource)));
+            &heap_props, D3D12_HEAP_FLAG_NONE, &resource_desc,init_state, nullptr, IID_PPV_ARGS(&out_buffer.d3d12_resource)));
 
     out_buffer.size = byte_size;
 }
 
-// auto Device::create_descriptor_set_layout(
-//     std::span<DescriptorSetLayoutItem> layout_items)
-//     -> DescriptorSetLayout* {
-//     auto layout = new D3d12DescriptorSetLayout{ layout_items };
-//     descriptor_set_layouts.push_back(layout);
-//
-//     return layout;
-// }
+void Device::create_texture(uint32_t width, uint32_t height, Format format, Texture& out_texture, HeapType heap_type) {
+    D3D12_HEAP_PROPERTIES heap_props = {};
+    D3D12_RESOURCE_DESC resource_desc = {};
+    D3D12_RESOURCE_STATES init_state = {};
 
-// DescriptorSet* Device::create_descriptor_set(
-//     DescriptorSetLayout& layout,
-//     std::span<DescriptorSetItem> descriptors) {
-//     auto& d3d12_layout = static_cast<D3d12DescriptorSetLayout&>(layout);
-//
-//     for (auto& layout_item : d3d12_layout.items) {
-//         switch (layout_item.type) {
-//         // case DescriptorType::BUFFER: create_srv();
-//         default: throw std::invalid_argument("Invalid descriptor type");
-//         }
-//     }
-//
-//     throw std::invalid_argument("Not implemented");
-// }
+    if (heap_type == HeapType::DEFAULT) {
+        heap_props.Type = D3D12_HEAP_TYPE_DEFAULT;
+        init_state = D3D12_RESOURCE_STATE_COMMON;
+    } else {
+        heap_props.Type = D3D12_HEAP_TYPE_UPLOAD;
+        init_state = D3D12_RESOURCE_STATE_GENERIC_READ;
+    }
 
-// auto Device::create_swap_chain(
-//     unsigned int width,
-//     unsigned int height,
-//     Format format,
-//     unsigned int buffer_count,
-//     AppWindow& window) -> SwapChain {
-//     if (window.type() != AppWindow::Type::WINDOWS) {
-//         throw std::runtime_error("Invalid AppWindow type");
-//     }
-//     auto hwnd = reinterpret_cast<WinAppWindow&>(window).hwnd();
-//
-//     auto swap_chain_desc = DXGI_SWAP_CHAIN_DESC1{
-//         .Width = width,
-//         .Height = height,
-//         .Format = to_d3d12_format(format),
-//         .Stereo = false,
-//         .SampleDesc = { 1, 0 },
-//         .BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT,
-//         .BufferCount = buffer_count,
-//         .Scaling = DXGI_SCALING_NONE,
-//         .SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD,
-//         .AlphaMode = DXGI_ALPHA_MODE_IGNORE,
-//         .Flags = 0
-//     };
-//
-//     auto swap_chain_1 = static_cast<IDXGISwapChain1*>(nullptr);
-//     auto swap_chain_3 = static_cast<IDXGISwapChain3*>(nullptr);
-//
-//     if (dxgi_factory->CreateSwapChainForHwnd(d3d12_device.Get(),
-//             hwnd,
-//             &swap_chain_desc,
-//             nullptr,
-//             nullptr,
-//             &swap_chain_1)
-//         != S_OK) {
-//         throw std::runtime_error("Failed to create dxgi swap chain");
-//     }
-//     if (swap_chain_1->QueryInterface(__uuidof(IDXGISwapChain3), reinterpret_cast<void**>(&swap_chain_3)) != S_OK) {
-//         throw std::runtime_error("Failed to get dxgi swap chain interface");
-//     }
-//
-//     // TODO: Finish
-//
-//     throw std::runtime_error("Not implemented");
-// }
+    resource_desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    resource_desc.Width = width;
+    resource_desc.Height = height;
+    resource_desc.Format = to_d3d12_format(format);
+    resource_desc.DepthOrArraySize = 1;
+    resource_desc.MipLevels = 1;
+    resource_desc.SampleDesc.Count = 1;
+    resource_desc.SampleDesc.Quality = 0;
+
+    DL_CHECK_D3D(
+        d3d12_device->CreateCommittedResource(
+            &heap_props, D3D12_HEAP_FLAG_NONE, &resource_desc, init_state, nullptr, IID_PPV_ARGS(&out_texture.d3d12_resource)));
+
+    out_texture.width = width;
+    out_texture.height = height;
+    out_texture.format = format;
+}
+
+void Device::create_sampler(Filter filter, Descriptor descriptor) {
+    D3D12_SAMPLER_DESC sampler_desc = {};
+
+    sampler_desc.Filter = to_d3d12_filter(filter);
+    sampler_desc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    sampler_desc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    sampler_desc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    sampler_desc.MinLOD = 0.0f;
+    sampler_desc.MaxLOD = D3D12_FLOAT32_MAX;
+    
+    d3d12_device->CreateSampler(&sampler_desc, descriptor.cpu_handle);
+}
 }

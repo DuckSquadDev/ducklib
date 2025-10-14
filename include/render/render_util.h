@@ -8,10 +8,17 @@
 #include "../core/logging/log_level.h"
 
 namespace ducklib::render {
-// inline void (*log)(std::string_view message, LogLevel level, std::source_location source_location);
-inline void log(std::string_view message, LogLevel level, std::source_location source_location) {
-    std::println("{}", message.data());
-}
+inline void (*log)(std::string_view message, LogLevel level, std::source_location source_location);
+
+void memcpy_texture_to_buffer(
+    std::byte* dest,
+    uint32_t dest_offset,
+    const std::byte* source,
+    uint32_t source_x,
+    uint32_t source_y,
+    uint32_t source_width,
+    uint32_t source_height,
+    uint32_t pitch);
 
 inline LPSTR format_check_message(HRESULT hresult, std::string_view text) {
     LPSTR msg_ptr;

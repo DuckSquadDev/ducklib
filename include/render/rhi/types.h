@@ -1,6 +1,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <cassert>
 #include <wrl/client.h>
 #include <dxgi1_4.h>
 
@@ -8,10 +9,13 @@
 #include "../lib/d3dx12.h"
 
 #include "constants.h"
+#include "render/render_util.h"
 
 using Microsoft::WRL::ComPtr;
 
 namespace ducklib::render {
+constexpr auto MAX_RT_COUNT = 8;
+
 struct Adapter {
     ComPtr<IDXGIAdapter1> dxgi_adapter = nullptr;
     char name[128] = {};
@@ -20,6 +24,34 @@ struct Adapter {
 struct Buffer {
     ID3D12Resource1* d3d12_resource = nullptr;
     uint64_t size;
+
+    void map(void** out_ptr) {
+        DL_CHECK_D3D(d3d12_resource->Map(0, nullptr, out_ptr));
+    }
+
+    void unmap() {
+        d3d12_resource->Unmap(0, nullptr);
+    }
+};
+
+struct Texture {
+    ID3D12Resource1* d3d12_resource = nullptr;
+    uint32_t width;
+    uint32_t height;
+    Format format;
+
+    void map(void** out_ptr) {
+        DL_CHECK_D3D(d3d12_resource->Map(0, nullptr, out_ptr));
+    }
+
+    void unmap() {
+        d3d12_resource->Unmap(0, nullptr);
+    }
+};
+
+struct Descriptor {
+    D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle;
+    D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle;
 };
 
 struct DescriptorHeap {
@@ -28,6 +60,17 @@ struct DescriptorHeap {
     D3D12_GPU_DESCRIPTOR_HANDLE first_gpu_handle = {};
     uint16_t descriptor_size;
     DescriptorHeapType type;
+    uint32_t count = 0;
+    uint32_t allocatedCount = 0;
+
+    auto allocate() -> Descriptor {
+        assert(allocatedCount + 1 <= count);
+
+        uint32_t index = allocatedCount;
+        ++allocatedCount;
+
+        return Descriptor { cpu_handle(index), gpu_handle(index) };
+    }
 
     auto cpu_handle(uint64_t index) -> D3D12_CPU_DESCRIPTOR_HANDLE {
         auto ptr = reinterpret_cast<uint8_t*>(first_cpu_handle.ptr) + index * descriptor_size;
@@ -77,11 +120,6 @@ struct DescriptorDesc {
     ResourceType type;
 };
 
-struct Descriptor {
-    D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle;
-    D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle;
-};
-
 struct DescriptorSet {};
 
 struct ConstantBindingDesc {
@@ -91,16 +129,17 @@ struct ConstantBindingDesc {
 };
 
 struct DescriptorBindingDesc {
-    uint32_t shader_register;
-    uint32_t register_space;
+    uint32_t shader_register = 0;
+    uint32_t register_space = 0;
 };
 
 // Support for each binding being able to bind multiple descriptor sets/tables is skipped for simplicity
 struct DescriptorSetBindingDesc {
-    uint32_t base_shader_register;
-    uint32_t register_space;
+    DescriptorSetRangeType type;
+    uint32_t base_shader_register = 0;
+    uint32_t register_space = 0;
     uint32_t descriptor_count;
-    uint32_t descriptor_offset;
+    uint32_t descriptor_offset = 0;
 };
 
 struct BindingDesc {
@@ -130,6 +169,23 @@ struct RasterizerDesc {
     FrontFace front_face = FrontFace::CLOCKWISE;
     bool clip_depth = true;
     bool msaa = false;
+};
+
+struct RtBlendDesc {
+    bool blend_enable = false;
+    bool logic_op_enable = false;
+    Blend source_blend = Blend::ONE;
+    Blend dest_blend = Blend::ZERO;
+    BlendOp blend_op = BlendOp::ADD;
+    Blend source_blend_alpha = Blend::ONE;
+    Blend dest_blend_alpha = Blend::ZERO;
+    BlendOp blend_op_alpha = BlendOp::ADD;
+    LogicOp logic_op = LogicOp::NOOP;
+    uint8_t rt_write_mask = D3D12_COLOR_WRITE_ENABLE_ALL;
+};
+
+struct BlendDesc {
+    RtBlendDesc rts[MAX_RT_COUNT];
 };
 
 struct DepthStencilDesc {
@@ -163,10 +219,11 @@ struct PsoDesc {
     Shader* hull_shader = nullptr;
     Shader* domain_shader = nullptr;
     RasterizerDesc rasterizer;
+    BlendDesc blend;
     DepthStencilDesc depth_stencil;
     InputLayout input_layout;
     uint32_t rt_count;
-    Format rt_formats[8];
+    Format rt_formats[MAX_RT_COUNT];
     Format ds_format;
     PrimitiveTopology primitive_topology = PrimitiveTopology::TRIANGLE;
 };
@@ -199,6 +256,8 @@ struct CommandList {
 
     void set_pso(const Pso& pso);
     void set_binding_set(const BindingSet& binding_set);
+    void set_descriptor_heaps(uint32_t heap_count, DescriptorHeap** heaps);
+    void set_descriptor_set(uint32_t slot, Descriptor base_descriptor);
     void set_viewport(float top_left_x, float top_left_y, float width, float height);
     void set_scissor_rect(int32_t left, int32_t top, int32_t right, int32_t bottom);
     void set_primitive_topology(PrimitiveTopology topology);
@@ -206,6 +265,9 @@ struct CommandList {
     void set_vertex_buffer(const Buffer& vertex_buffer, uint32_t stride);
     
     void draw(uint32_t vertex_count, uint32_t offset);
+
+    void copy_texture(Texture& dest, uint32_t dest_x, uint32_t dest_y, uint32_t dest_z, const Texture& source);
+    void copy_texture(Texture& dest, uint32_t dest_x, uint32_t dest_y, const Buffer& source);
 
     void set_rt(const Descriptor& rt_descriptor);
     void clear_rt(const Descriptor& rt_descriptor, const float color[4]);

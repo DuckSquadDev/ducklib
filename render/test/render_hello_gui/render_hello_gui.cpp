@@ -1,11 +1,16 @@
+#include <array>
 #include <iostream>
 #include <print>
 #include <thread>
 
 #include "core/win/win_app_window.h"
 #include "math/math.h"
+#include "../../../include/render/gui/font.h"
+#include "core/unicode.h"
+#include "input/input.h"
 #include "render/render_util.h"
 #include "render/resource_manager.h"
+#include "render/gui/gui.h"
 #include "render/rhi/rhi.h"
 #include "render/rhi/types.h"
 #include "render/rhi/shader.h"
@@ -32,12 +37,15 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     render::Adapter adapters[1] = {};
     render::Device device = {};
     render::CommandQueue queue = {};
+    render::CommandQueue copy_queue = {};
     render::CommandList command_list = {};
+    render::CommandList copy_list = {};
     render::Buffer v_buffer = {};
     render::Buffer c_buffer = {};
     render::Descriptor cb_descriptor = {};
     render::DescriptorHeap rt_descriptor_heap = {};
     render::DescriptorHeap resource_descriptor_heap = {};
+    render::DescriptorHeap sampler_descriptor_heap = {};
     render::BindingSetDesc binding_set_desc = {};
     render::BindingSet binding_set = {};
     render::Shader vertex_shader = {};
@@ -45,17 +53,26 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     render::PsoDesc pso_desc = {};
     render::Pso pso = {};
     render::Fence fence = {};
+    render::Fence copy_fence = {};
     render::Descriptor rt_descriptors[2] = {};
     uint32_t frame_index = 0;
     ID3D12Resource* back_buffer = nullptr;
 
     render::log = output;
+    InputState input_state = {};
+    register_raw_win_input(window.hwnd());
+    window.register_message_callback(
+        [&input_state] (AppWindow* app_window, uint32_t msg, WPARAM wParam, LPARAM lParam) {
+            process_win_input(app_window, input_state, msg, wParam, lParam);
+        });
 
     create_rhi(rhi);
     rhi.enumerate_adapters(adapters, 1);
     rhi.create_device(adapters[0], device);
     device.create_queue(render::QueueType::GRAPHICS, queue);
+    device.create_queue(render::QueueType::COPY, copy_queue);
     device.create_command_list(render::QueueType::GRAPHICS, command_list);
+    device.create_command_list(render::QueueType::COPY, copy_list);
 
     compile_shader(L"shaders.hlsl", render::ShaderType::VERTEX, "vs_main", &vertex_shader);
     compile_shader(L"shaders.hlsl", render::ShaderType::PIXEL, "ps_main", &pixel_shader);
@@ -86,14 +103,16 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
 
     device.create_descriptor_heap(render::DescriptorHeapType::RT, 128, rt_descriptor_heap);
     device.create_descriptor_heap(render::DescriptorHeapType::CBV_SRV_UAV, 128, resource_descriptor_heap);
+    device.create_descriptor_heap(render::DescriptorHeapType::SAMPLER, 128, sampler_descriptor_heap);
     device.create_fence(frame_index, fence);
+    device.create_fence(0, copy_fence);
 
     rhi.create_swap_chain(queue, width, height, render::Format::R8G8B8A8_UNORM, window.hwnd(), swap_chain);
-    rt_descriptors[0] = { .cpu_handle = rt_descriptor_heap.cpu_handle(0) };
+    rt_descriptors[0] = rt_descriptor_heap.allocate();
     swap_chain.d3d12_swap_chain->GetBuffer(0, IID_PPV_ARGS(&back_buffer));
     device.create_rt_descriptor(back_buffer, nullptr, rt_descriptors[0]);
     back_buffer->Release();
-    rt_descriptors[1] = { .cpu_handle = rt_descriptor_heap.cpu_handle(1) };
+    rt_descriptors[1] = rt_descriptor_heap.allocate();
     swap_chain.d3d12_swap_chain->GetBuffer(1, IID_PPV_ARGS(&back_buffer));
     device.create_rt_descriptor(back_buffer, nullptr, rt_descriptors[1]);
     back_buffer->Release();
@@ -107,10 +126,23 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     device.create_buffer(256, c_buffer, render::HeapType::UPLOAD);
     render::upload_buffer_data(c_buffer, 0, &view, sizeof(view));
     render::upload_buffer_data(c_buffer, sizeof(Matrix4), &projection, sizeof(projection));
-    cb_descriptor = { .cpu_handle = resource_descriptor_heap.cpu_handle(0) };
+    cb_descriptor = resource_descriptor_heap.allocate();
     device.create_cbuffer_descriptor(c_buffer, cb_descriptor);
 
+    render::DescriptorHeap* heaps[] = { &resource_descriptor_heap, &sampler_descriptor_heap };
+
+    // New GUI stuff
+    auto gui_state = new gui::GuiState();
+    std::array<char8_t, 2048> text_buffer;
+    auto text_bytes = 2u;
+    text_buffer[0] = 'h';
+    text_buffer[1] = 'i';
+
+    gui::init_gui_state(*gui_state, device, width, height, resource_descriptor_heap, sampler_descriptor_heap);
+    gui_state->input_state = &input_state;
+
     while (window.is_open()) {
+        frame_input_reset(input_state);
         window.process_messages();
 
         uint32_t rt = frame_index % 2;
@@ -122,6 +154,15 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
         rotation = rotate_20 * rotation;
         render::upload_buffer_data(c_buffer, 2 * sizeof(Matrix4), &rotation, sizeof(rotation));
 
+        // New GUI stuff
+        frame_reset_gui_state(*gui_state);
+        gui::draw_edit(*gui_state, { 40, 20, 200, 30 }, text_buffer, text_bytes);
+        gui::draw_button(*gui_state, { 40, 80, 100, 30 }, u8"click me", [] {
+            std::println("clicked");
+            std::cout.flush();
+        });
+
+        // Triangle rendering
         command_list.reset(&pso);
         command_list.set_binding_set(binding_set);
         command_list.set_viewport(0.0f, 0.0f, width, height);
@@ -133,6 +174,10 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
         command_list.set_constant_buffer(0, c_buffer);
         command_list.set_vertex_buffer(v_buffer, sizeof(Vertex));
         command_list.draw(3, 0);
+
+        // GUI rendering
+        draw_gui_state(*gui_state, command_list, heaps);
+
         command_list.resource_barrier(rt_buffer, render::ResourceState::RENDER_TARGET, render::ResourceState::PRESENT);
         command_list.close();
         queue.execute(command_list);
@@ -144,8 +189,11 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
 
         rt_buffer->Release();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(8));
+        gui::check_controls_defocused(*gui_state);
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
     }
+
+    delete gui_state;
 
     c_buffer.d3d12_resource->Release();
     fence.d3d12_fence->Release();
@@ -157,6 +205,8 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     binding_set.d3d12_signature->Release();
     pixel_shader.d3d_bytecode_blob->Release();
     vertex_shader.d3d_bytecode_blob->Release();
+
+    unregister_raw_win_input();
 
     return 0;
 }

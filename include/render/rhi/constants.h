@@ -6,7 +6,7 @@
 namespace ducklib::render {
 enum class QueueType {
     GRAPHICS,
-    TRANSFER,
+    COPY,
     COMPUTE
 };
 
@@ -20,6 +20,13 @@ enum class DescriptorHeapType {
     SAMPLER,
     RT,
     DS
+};
+
+enum class DescriptorSetRangeType {
+    SRV,
+    UAV,
+    CBV,
+    SAMPLER
 };
 
 #undef DOMAIN
@@ -107,10 +114,82 @@ enum class PrimitiveTopology {
     PATCH
 };
 
+#undef GENERIC_READ
 enum class ResourceState {
-    PRESENT,
-    RENDER_TARGET
+    COMMON = 0,
+    VERTEX_AND_CONSTANT_BUFFER = 0x1,
+    INDEX_BUFFER = 0x2,
+    RENDER_TARGET = 0x4,
+    UNORDERED_ACCESS = 0x8,
+    DEPTH_WRITE = 0x10,
+    DEPTH_READ = 0x20,
+    NON_PIXEL_SHADER_RESOURCE = 0x40,
+    PIXEL_SHADER_RESOURCE = 0x80,
+    STREAM_OUT = 0x100,
+    INDIRECT_ARGUMENT = 0x200,
+    COPY_DEST = 0x400,
+    COPY_SOURCE = 0x800,
+    RESOLVE_DEST = 0x1000,
+    RESOLVE_SOURCE = 0x2000,
+    RAYTRACING_ACCELERATION_STRUCTURE = 0x400000,
+    SHADING_RATE_SOURCE = 0x1000000,
+    GENERIC_READ = VERTEX_AND_CONSTANT_BUFFER | INDEX_BUFFER | NON_PIXEL_SHADER_RESOURCE | PIXEL_SHADER_RESOURCE | INDIRECT_ARGUMENT | COPY_SOURCE,
+    ALL_SHADER_RESOURCE = NON_PIXEL_SHADER_RESOURCE | PIXEL_SHADER_RESOURCE,
+    PRESENT = 0,
+    PREDICATION = 0x200,
 };
+
+enum class Filter {
+    MIN_MAG_MIP_LINEAR
+};
+
+enum class Blend {
+    ZERO,
+    ONE,
+    SOURCE_COLOR,
+    INV_SOURCE_COLOR,
+    SOURCE_ALPHA,
+    INV_SOURCE_ALPHA,
+    DEST_COLOR,
+    INV_DEST_COLOR,
+    DEST_ALPHA,
+    INV_DEST_ALPHA
+};
+
+enum class BlendOp {
+    ADD,
+    SUIBTRACT,
+    REV_SUBTRACT,
+    MIN,
+    MAX
+};
+
+enum class LogicOp {
+    CLEAR,
+    SET,
+    COPY,
+    COPY_INV,
+    NOOP,
+    INVERT,
+    AND,
+    NAND,
+    OR,
+    NOR,
+    XOR,
+    EQ,
+    AND_REV,
+    AND_INV,
+    OR_REV,
+    OR_INV
+};
+
+// enum RtWriteMask {
+//     RED = 1,
+//     GREEN = 2,
+//     BLUE = 4,
+//     ALPHA = 8,
+//     ALL = 15
+// };
 
 enum class Format : uint32_t {
     UNKNOWN = 0,
@@ -232,9 +311,9 @@ inline auto to_d3d12_queue_type(QueueType type) {
     switch (type) {
     case QueueType::GRAPHICS: return D3D12_COMMAND_LIST_TYPE_DIRECT;
     case QueueType::COMPUTE: return D3D12_COMMAND_LIST_TYPE_COMPUTE;
-    case QueueType::TRANSFER: return D3D12_COMMAND_LIST_TYPE_COPY;
-    default: std::abort();
+    case QueueType::COPY: return D3D12_COMMAND_LIST_TYPE_COPY;
     }
+    std::abort();
 }
 
 inline auto to_d3d12_descriptor_heap_type(DescriptorHeapType heap_type) -> D3D12_DESCRIPTOR_HEAP_TYPE {
@@ -243,8 +322,8 @@ inline auto to_d3d12_descriptor_heap_type(DescriptorHeapType heap_type) -> D3D12
     case DescriptorHeapType::SAMPLER: return D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
     case DescriptorHeapType::RT: return D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
     case DescriptorHeapType::DS: return D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-    default: std::abort();
     }
+    std::abort();
 }
 
 inline auto to_d3d12_binding_type(BindingType type) -> D3D12_ROOT_PARAMETER_TYPE {
@@ -254,8 +333,18 @@ inline auto to_d3d12_binding_type(BindingType type) -> D3D12_ROOT_PARAMETER_TYPE
     case BindingType::SRV_DESCRIPTOR: return D3D12_ROOT_PARAMETER_TYPE_SRV;
     case BindingType::UAV_DESCRIPTOR: return D3D12_ROOT_PARAMETER_TYPE_UAV;
     case BindingType::DESCRIPTOR_SET: return D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    default: std::abort();
     }
+    std::abort();
+}
+
+inline auto to_d3d12_descriptor_range_type(DescriptorSetRangeType type) -> D3D12_DESCRIPTOR_RANGE_TYPE {
+    switch (type) {
+    case DescriptorSetRangeType::SRV: return D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    case DescriptorSetRangeType::UAV: return D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+    case DescriptorSetRangeType::CBV: return D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+    case DescriptorSetRangeType::SAMPLER: return D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+    }
+    std::abort();
 }
 
 inline auto to_d3d12_srv_dimension(ResourceType type, uint32_t array_size) -> D3D12_SRV_DIMENSION {
@@ -280,8 +369,8 @@ inline auto to_d3d12_srv_dimension(ResourceType type, uint32_t array_size) -> D3
         } else {
             return D3D12_SRV_DIMENSION_TEXTURECUBE;
         }
-    default: std::abort();
     }
+    std::abort();
 }
 
 inline auto to_d3d12_uav_dimension(ResourceType type, uint32_t array_size) -> D3D12_UAV_DIMENSION {
@@ -300,8 +389,9 @@ inline auto to_d3d12_uav_dimension(ResourceType type, uint32_t array_size) -> D3
             return D3D12_UAV_DIMENSION_TEXTURE2D;
         }
     case ResourceType::TEXTURE_3D: return D3D12_UAV_DIMENSION_TEXTURE3D;
-    default: std::abort();
+    case ResourceType::TEXTURE_CUBE: return D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
     }
+    std::abort();
 }
 
 inline auto to_d3d12_rtv_dimension(ResourceType type, uint32_t array_size) -> D3D12_RTV_DIMENSION {
@@ -320,8 +410,9 @@ inline auto to_d3d12_rtv_dimension(ResourceType type, uint32_t array_size) -> D3
             return D3D12_RTV_DIMENSION_TEXTURE2D;
         }
     case ResourceType::TEXTURE_3D: return D3D12_RTV_DIMENSION_TEXTURE3D;
-    default: std::abort();
+    case ResourceType::TEXTURE_CUBE: return D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
     }
+    std::abort();
 }
 
 inline auto to_d3d_shader_target(ShaderType type) -> const char* {
@@ -332,16 +423,16 @@ inline auto to_d3d_shader_target(ShaderType type) -> const char* {
     case ShaderType::DOMAIN: return "ds_5_0";
     case ShaderType::HULL: return "hs_5_0";
     case ShaderType::COMPUTE: return "cs_5_0";
-    default: std::abort();
     }
+    std::abort();
 }
 
 inline auto to_d3d12_fill_mode(FillMode fill_mode) -> D3D12_FILL_MODE {
     switch (fill_mode) {
     case FillMode::WIREFRAME: return D3D12_FILL_MODE_WIREFRAME;
     case FillMode::SOLID: return D3D12_FILL_MODE_SOLID;
-    default: std::abort();
     }
+    std::abort();
 }
 
 inline auto to_d3d12_cull_mode(CullMode cull_mode) -> D3D12_CULL_MODE {
@@ -349,16 +440,16 @@ inline auto to_d3d12_cull_mode(CullMode cull_mode) -> D3D12_CULL_MODE {
     case CullMode::NONE: return D3D12_CULL_MODE_NONE;
     case CullMode::FRONT: return D3D12_CULL_MODE_FRONT;
     case CullMode::BACK: return D3D12_CULL_MODE_BACK;
-    default: std::abort();
     }
+    std::abort();
 }
 
 inline auto to_d3d12_front_face(FrontFace front_face) -> BOOL {
     switch (front_face) {
     case FrontFace::CLOCKWISE: return FALSE;
     case FrontFace::COUNTER_CLOCKWISE: return TRUE;
-    default: std::abort();
     }
+    std::abort();
 }
 
 inline auto to_d3d12_depth_comparison(DepthComparison depth_comparison) -> D3D12_COMPARISON_FUNC {
@@ -371,16 +462,16 @@ inline auto to_d3d12_depth_comparison(DepthComparison depth_comparison) -> D3D12
     case DepthComparison::NEQ: return D3D12_COMPARISON_FUNC_NOT_EQUAL;
     case DepthComparison::ALWAYS: return D3D12_COMPARISON_FUNC_ALWAYS;
     case DepthComparison::NEVER: return D3D12_COMPARISON_FUNC_NEVER;
-    default: std::abort();
     }
+    std::abort();
 }
 
 inline auto to_d3d12_input_slot_type(InputSlotType slot_type) -> D3D12_INPUT_CLASSIFICATION {
     switch (slot_type) {
     case InputSlotType::PER_VERTEX_DATA: return D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
     case InputSlotType::PER_INSTANCE_DATA: return D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
-    default: std::abort();
     }
+    std::abort();
 }
 
 inline auto to_d3d12_primitive_topology_type(PrimitiveTopology topology) -> D3D12_PRIMITIVE_TOPOLOGY_TYPE {
@@ -390,8 +481,8 @@ inline auto to_d3d12_primitive_topology_type(PrimitiveTopology topology) -> D3D1
     case PrimitiveTopology::LINE: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
     case PrimitiveTopology::TRIANGLE: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     case PrimitiveTopology::PATCH: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
-    default: std::abort();
     }
+    std::abort();
 }
 
 inline auto to_d3d_primitive_topology(PrimitiveTopology topology) -> D3D_PRIMITIVE_TOPOLOGY {
@@ -401,16 +492,64 @@ inline auto to_d3d_primitive_topology(PrimitiveTopology topology) -> D3D_PRIMITI
     case PrimitiveTopology::LINE: return D3D_PRIMITIVE_TOPOLOGY_LINELIST;
     case PrimitiveTopology::TRIANGLE: return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
     case PrimitiveTopology::PATCH: return D3D_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST;
-    default: std::abort();
     }
+    std::abort();
 }
 
-inline auto to_d3d12_resource_state(ResourceState state) -> D3D12_RESOURCE_STATES {
-    switch (state) {
-    case ResourceState::PRESENT: return D3D12_RESOURCE_STATE_PRESENT;
-    case ResourceState::RENDER_TARGET: return D3D12_RESOURCE_STATE_RENDER_TARGET;
-    default: std::abort();
+inline auto to_d3d12_filter(Filter filter) -> D3D12_FILTER {
+    switch (filter) {
+    case Filter::MIN_MAG_MIP_LINEAR: return D3D12_FILTER_MIN_MAG_MIP_LINEAR;
     }
+    std::abort();
+}
+
+inline auto to_d3d12_blend(Blend blend) -> D3D12_BLEND {
+    switch (blend) {
+    case Blend::ZERO: return D3D12_BLEND_ZERO;
+    case Blend::ONE: return D3D12_BLEND_ONE;
+    case Blend::SOURCE_COLOR: return D3D12_BLEND_SRC_COLOR;
+    case Blend::INV_SOURCE_COLOR: return D3D12_BLEND_INV_SRC_COLOR;
+    case Blend::SOURCE_ALPHA: return D3D12_BLEND_SRC_ALPHA;
+    case Blend::INV_SOURCE_ALPHA: return D3D12_BLEND_INV_SRC_ALPHA;
+    case Blend::DEST_COLOR: return D3D12_BLEND_DEST_COLOR;
+    case Blend::INV_DEST_COLOR: return D3D12_BLEND_INV_DEST_COLOR;
+    case Blend::INV_DEST_ALPHA: return D3D12_BLEND_INV_DEST_ALPHA;
+    case Blend::DEST_ALPHA: return D3D12_BLEND_DEST_ALPHA;
+    }
+    std::abort();
+}
+
+inline auto to_d3d12_blend_op(BlendOp op) -> D3D12_BLEND_OP {
+    switch (op) {
+    case BlendOp::ADD: return D3D12_BLEND_OP_ADD;
+    case BlendOp::SUIBTRACT: return D3D12_BLEND_OP_SUBTRACT;
+    case BlendOp::REV_SUBTRACT: return D3D12_BLEND_OP_REV_SUBTRACT;
+    case BlendOp::MIN: return D3D12_BLEND_OP_MIN;
+    case BlendOp::MAX: return D3D12_BLEND_OP_MAX;
+    }
+    std::abort();
+}
+
+inline auto to_d3d12_logic_op(LogicOp op) -> D3D12_LOGIC_OP {
+    switch (op) {
+    case LogicOp::CLEAR: return D3D12_LOGIC_OP_CLEAR;
+    case LogicOp::SET: return D3D12_LOGIC_OP_SET;
+    case LogicOp::COPY: return D3D12_LOGIC_OP_COPY;
+    case LogicOp::COPY_INV: return D3D12_LOGIC_OP_COPY_INVERTED;
+    case LogicOp::NOOP: return D3D12_LOGIC_OP_NOOP;
+    case LogicOp::INVERT: return D3D12_LOGIC_OP_INVERT;
+    case LogicOp::AND: return D3D12_LOGIC_OP_AND;
+    case LogicOp::NAND: return D3D12_LOGIC_OP_NAND;
+    case LogicOp::OR: return D3D12_LOGIC_OP_OR;
+    case LogicOp::NOR: return D3D12_LOGIC_OP_NOR;
+    case LogicOp::XOR: return D3D12_LOGIC_OP_XOR;
+    case LogicOp::EQ: return D3D12_LOGIC_OP_EQUIV;
+    case LogicOp::AND_REV: return D3D12_LOGIC_OP_AND_REVERSE;
+    case LogicOp::AND_INV: return D3D12_LOGIC_OP_AND_INVERTED;
+    case LogicOp::OR_REV: return D3D12_LOGIC_OP_OR_REVERSE;
+    case LogicOp::OR_INV: return D3D12_LOGIC_OP_OR_INVERTED;
+    }
+    std::abort();
 }
 
 static DXGI_FORMAT dxgi_format_map[] = {

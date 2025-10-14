@@ -11,6 +11,8 @@ using Microsoft::WRL::ComPtr;
 namespace ducklib::render {
 struct Device {
     ComPtr<ID3D12Device2> d3d12_device;
+    CommandQueue graphics_queue;
+    CommandQueue copy_queue;
 
     void create_queue(QueueType type, CommandQueue& out_queue);
     void create_command_list(QueueType queue_type, CommandList& out_list);
@@ -22,13 +24,14 @@ struct Device {
     void create_srv_descriptor(void* resource, const DescriptorDesc* desc, const Descriptor& descriptor);
     void create_uav_descriptor(void* resource, const DescriptorDesc* desc, const Descriptor& descriptor);
     void create_rt_descriptor(void* resource, const DescriptorDesc* desc, const Descriptor& descriptor);
-    void create_ds_descriptor(void* resource, const DescriptorDesc* desc, const Descriptor& descriptor);
 
     // Equivalent to D3D12's root signature
     void create_binding_set(const BindingSetDesc& binding_set_desc, BindingSet& out_set);
     void create_pso(const BindingSet& binding_set, const PsoDesc& pso_desc, Pso& pso_out);
 
     void create_buffer(uint64_t byte_size, Buffer& out_buffer, HeapType heap_type = HeapType::DEFAULT);
+    void create_texture(uint32_t width, uint32_t height, Format format, Texture& out_texture, HeapType heap_type = HeapType::DEFAULT);
+    void create_sampler(Filter filter, Descriptor descriptor);
 };
 }
 

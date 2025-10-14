@@ -5,6 +5,8 @@
 out/
 
 # User-specific files
+.idea/
+.renderdoc/
 *.suo
 *.user
 *.userosscache

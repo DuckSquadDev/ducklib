@@ -86,5 +86,10 @@ private:
         return (*this)(row, column);
     }
 };
+
+struct Rect {
+    int x, y;
+    int width, height;
+};
 }
 #endif
