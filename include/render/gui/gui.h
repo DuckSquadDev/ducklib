@@ -14,6 +14,9 @@ constexpr uint32_t GUI_INVALID_ID = -1;
 constexpr float DEF_RECT_COLOR[] = { 0.3f, 0.3f, 0.3f, 1.0f };
 constexpr float DEF_RECT_COLOR_HL[] = { 0.5f, 0.5f, 0.5f, 1.0f };
 constexpr float DEF_RECT_COLOR_HL2[] = { 0.2f, 0.5f, 0.5f, 1.0f };
+constexpr float DEF_BUTTON_COLOR[] = { 0.3f, 0.5f, 0.5f, 1.0f };
+constexpr float DEF_BUTTON_HOVER_COLOR[] = { 0.5f, 0.7f, 0.7f, 1.0f };
+constexpr float DEF_BUTTON_ACTIVE_COLOR[] = { 0.5f, 0.6f, 0.8f, 1.0f };
 
 struct GuiVertex {
     float x, y;
@@ -57,6 +60,7 @@ struct GuiState {
 void draw_rect(GuiState& gui_state, Rect rect);
 void draw_label(GuiState& gui_state, Rect rect, std::u8string_view text);
 void draw_edit(GuiState& gui_state, Rect rect, std::span<char8_t> text_buffer, uint32_t& text_bytes);
+void draw_button(GuiState& gui_state, Rect rect, std::u8string_view text, std::function<void()> callback);
 
 void init_gui_state(
     GuiState& gui_state,

@@ -75,6 +75,17 @@ bool check_hover(const GuiState& gui_state, Rect rect) {
     return false;
 }
 
+bool check_clicked(const GuiState& gui_state, Rect rect) {
+    if (gui_state.input_state) {
+        const auto* input = gui_state.input_state;
+        if (pos_in_rect(input->mouse_x, input->mouse_y, rect) && input->mouse_released(0)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool update_focus(GuiState& gui_state, Rect rect, uint32_t control_id) {
     if (gui_state.input_state) {
         const auto* input = gui_state.input_state;
@@ -114,6 +125,29 @@ void draw_edit(GuiState& gui_state, Rect rect, std::span<char8_t> text_buffer, u
         &gui_state.text_staging_vbuffer[gui_state.text_staged_vertex_count],
         remaining_text_vertices);
     gui_state.text_staged_vertex_count += quads_rendered * 6;
+}
+
+void draw_button(GuiState& gui_state, Rect rect, std::u8string_view text, std::function<void()> callback) {
+    auto color = DEF_BUTTON_COLOR;
+
+    if (check_clicked(gui_state, rect)) {
+        callback();
+        color = DEF_BUTTON_ACTIVE_COLOR;
+    } else if (check_hover(gui_state, rect)) {
+        color = DEF_BUTTON_HOVER_COLOR;
+    }
+    
+    submit_rect_vertices(gui_state, rect, color);
+
+    auto remaining_text_vertices = GuiState::TEXT_BUFFER_SIZE - gui_state.text_staged_vertex_count;
+    auto quads_rendered = render::generate_text_quads(
+        default_font,
+        text,
+        rect.x,
+        rect.y,
+        &gui_state.text_staging_vbuffer[gui_state.text_staged_vertex_count],
+        remaining_text_vertices);
+    gui_state.shape_staged_vertex_count += quads_rendered * 6;
 }
 
 void create_glyph_atlas_texture(
