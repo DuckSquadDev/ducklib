@@ -1,5 +1,6 @@
-#include "render/gui/gui.h"
+#include <iostream>
 
+#include "render/gui/gui.h"
 #include "core/unicode.h"
 #include "render/resource_manager.h"
 #include "render/gui/font.h"
@@ -8,7 +9,7 @@
 namespace ducklib::gui {
 auto default_font = render::generate_glyph_atlas(0x30, 0x7e, u8"Roboto-Regular.ttf", 24);
 
-void submit_rect_vertices(GuiState& gui_state, Rect rect);
+void submit_rect_vertices(GuiState& gui_state, Rect rect, const float color[] = DEF_RECT_COLOR);
 
 void draw_rect(GuiState& gui_state, Rect rect) {
     submit_rect_vertices(gui_state, rect);
@@ -28,13 +29,10 @@ void draw_label(GuiState& gui_state, Rect rect, std::u8string_view text) {
     gui_state.shape_staged_vertex_count += quads_rendered * 6;
 }
 
-bool mouse_clicks_rect(InputState& input_state, Rect rect) {
-    auto x = input_state.mouse_x;
-    auto y = input_state.mouse_y;
-    
+bool pos_in_rect(int x, int y, Rect rect) {
     if (rect.x <= x && x <= rect.x + rect.width
         && rect.y <= y && y <= rect.y + rect.height) {
-        return true;
+         return true;
     }
 
     return false;
@@ -67,17 +65,44 @@ void modify_text_from_input(std::span<char8_t> text_buffer, uint32_t& text_bytes
     }
 }
 
+bool check_hover(const GuiState& gui_state, Rect rect) {
+    if (gui_state.input_state) {
+        const auto input = gui_state.input_state;
+        return pos_in_rect(input->mouse_x, input->mouse_y, rect);
+    }
+
+    return false;
+}
+
+bool update_focus(GuiState& gui_state, Rect rect, uint32_t control_id) {
+    if (gui_state.input_state) {
+        const auto* input = gui_state.input_state;
+        if (pos_in_rect(input->mouse_x, input->mouse_y, rect) && input->mouse_released(0)) {
+            gui_state.focused_id = control_id;
+            gui_state.frame_clicked_id = control_id;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void draw_edit(GuiState& gui_state, Rect rect, std::span<char8_t> text_buffer, uint32_t& text_bytes) {
     auto id = gui_state.id_counter++;
+    auto color = DEF_RECT_COLOR;
 
-    if (gui_state.focused_id == id) {
+    if (id == gui_state.focused_id) {
         if (gui_state.input_state) {
             modify_text_from_input(text_buffer, text_bytes, gui_state.input_state->text_inputs);
             gui_state.input_state->text_inputs.clear();
         }
+        color = DEF_RECT_COLOR_HL2;
+    } else if (check_hover(gui_state, rect)) {
+        color = DEF_RECT_COLOR_HL;
     }
-
-    submit_rect_vertices(gui_state, rect);
+    
+    update_focus(gui_state, rect, id);
+    submit_rect_vertices(gui_state, rect, color);
 
     auto remaining_text_vertices = GuiState::TEXT_BUFFER_SIZE - gui_state.text_staged_vertex_count;
     auto quads_rendered = render::generate_text_quads(
@@ -88,13 +113,6 @@ void draw_edit(GuiState& gui_state, Rect rect, std::span<char8_t> text_buffer, u
         &gui_state.text_staging_vbuffer[gui_state.text_staged_vertex_count],
         remaining_text_vertices);
     gui_state.text_staged_vertex_count += quads_rendered * 6;
-
-    if (gui_state.input_state) {
-        auto* input = gui_state.input_state;
-        if (mouse_clicks_rect(*input, rect)) {
-            gui_state.focused_id = id;
-        }
-    }
 }
 
 void create_glyph_atlas_texture(
@@ -175,9 +193,10 @@ void init_gui_state(
     binding_set_desc.bindings[2].descriptor_set_binding.descriptor_count = 1;
     device.create_binding_set(binding_set_desc, gui_state.binding_set);
 
-    gui_pso_desc.input_layout.element_count = 2;
+    gui_pso_desc.input_layout.element_count = 3;
     gui_pso_desc.input_layout.elements[0] = { "POSITION", 0, 0, 0, 0, render::Format::R32G32_FLOAT };
     gui_pso_desc.input_layout.elements[1] = { "TEXCOORD", 0, 0, 8, 0, render::Format::R32G32_FLOAT };
+    gui_pso_desc.input_layout.elements[2] = { "COLOR", 0, 0, 16, 0, render::Format::R32G32B32A32_FLOAT };
     gui_pso_desc.vertex_shader = &gui_state.gui_vshader;
     gui_pso_desc.pixel_shader = &gui_state.gui_pshader;
     gui_pso_desc.rt_count = 1;
@@ -185,9 +204,10 @@ void init_gui_state(
     gui_pso_desc.rasterizer.clip_depth = false;
     device.create_pso(gui_state.binding_set, gui_pso_desc, gui_state.gui_pso);
 
-    text_pso_desc.input_layout.element_count = 2;
+    text_pso_desc.input_layout.element_count = 3;
     text_pso_desc.input_layout.elements[0] = { "POSITION", 0, 0, 0, 0, render::Format::R32G32_FLOAT };
     text_pso_desc.input_layout.elements[1] = { "TEXCOORD", 0, 0, 8, 0, render::Format::R32G32_FLOAT };
+    text_pso_desc.input_layout.elements[2] = { "COLOR", 0, 0, 16, 0, render::Format::R32G32B32A32_FLOAT };
     text_pso_desc.vertex_shader = &gui_state.text_vshader;
     text_pso_desc.pixel_shader = &gui_state.text_pshader;
     text_pso_desc.rt_count = 1;
@@ -208,24 +228,25 @@ void init_gui_state(
     create_glyph_atlas_texture(gui_state, device, srv_heap, sampler_heap);
 }
 
-void submit_rect_vertices(GuiState& gui_state, Rect rect) {
+void submit_rect_vertices(GuiState& gui_state, Rect rect, const float color[]) {
     auto i = gui_state.shape_staged_vertex_count;
     auto x0 = static_cast<float>(rect.x);
     auto x1 = static_cast<float>(rect.x + rect.width);
     auto y0 = static_cast<float>(rect.y);
     auto y1 = static_cast<float>(rect.y + rect.height);
 
-    gui_state.shape_staging_vbuffer[i + 0] = { x0, y0, 0.0f, 0.0f };
-    gui_state.shape_staging_vbuffer[i + 1] = { x1, y0, 0.0f, 0.0f };
-    gui_state.shape_staging_vbuffer[i + 2] = { x0, y1, 0.0f, 0.0f };
+    gui_state.shape_staging_vbuffer[i + 0] = { x0, y0, 0.0f, 0.0f, color[0], color[1], color[2], color[3] };
+    gui_state.shape_staging_vbuffer[i + 1] = { x1, y0, 0.0f, 0.0f, color[0], color[1], color[2], color[3] };
+    gui_state.shape_staging_vbuffer[i + 2] = { x0, y1, 0.0f, 0.0f, color[0], color[1], color[2], color[3] };
     gui_state.shape_staging_vbuffer[i + 3] = gui_state.shape_staging_vbuffer[i + 2];
     gui_state.shape_staging_vbuffer[i + 4] = gui_state.shape_staging_vbuffer[i + 1];
-    gui_state.shape_staging_vbuffer[i + 5] = { x1, y1, 0.0f, 0.0f };
+    gui_state.shape_staging_vbuffer[i + 5] = { x1, y1, 0.0f, 0.0f, color[0], color[1], color[2], color[3] };
 
     gui_state.shape_staged_vertex_count += 6;
 }
 
-void reset_gui_state(GuiState& gui_state) {
+void frame_reset_gui_state(GuiState& gui_state) {
+    gui_state.frame_clicked_id = GUI_INVALID_ID;
     gui_state.id_counter = 0;
     gui_state.shape_staged_vertex_count = 0;
     gui_state.text_staged_vertex_count = 0;
@@ -255,5 +276,11 @@ void draw_gui_state(GuiState& gui_state, render::CommandList cmd_list, render::D
     cmd_list.set_descriptor_heaps(2, heaps);
     cmd_list.set_vertex_buffer(gui_state.text_vbuffer, sizeof(GuiVertex));
     cmd_list.draw(gui_state.text_staged_vertex_count, 0);
+}
+
+void check_controls_defocused(GuiState& gui_state) {
+    if (gui_state.input_state && gui_state.input_state->mouse_released(0) && gui_state.frame_clicked_id == GUI_INVALID_ID) {
+        gui_state.focused_id = GUI_INVALID_ID;
+    }
 }
 }

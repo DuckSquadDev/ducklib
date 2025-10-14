@@ -25,11 +25,6 @@ struct Vertex {
     float color[4];
 };
 
-struct GuiVertex {
-    float pos[2];
-    float uv[2];
-};
-
 void output(std::string_view message, LogLevel level, std::source_location source_location) {
     std::print("{} ({}): {}", source_location.file_name(), source_location.line(), message.data());
     std::cout.flush();
@@ -65,10 +60,10 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
 
     render::log = output;
     InputState input_state = {};
-    register_raw_win_input();
+    register_raw_win_input(window.hwnd());
     window.register_message_callback(
-        [&input_state] (uint32_t msg, WPARAM wParam, LPARAM lParam) {
-            process_win_input(input_state, msg, wParam, lParam);
+        [&input_state] (AppWindow* app_window, uint32_t msg, WPARAM wParam, LPARAM lParam) {
+            process_win_input(app_window, input_state, msg, wParam, lParam);
         });
 
     create_rhi(rhi);
@@ -147,6 +142,7 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     gui_state->input_state = &input_state;
 
     while (window.is_open()) {
+        frame_input_reset(input_state);
         window.process_messages();
 
         uint32_t rt = frame_index % 2;
@@ -159,8 +155,8 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
         render::upload_buffer_data(c_buffer, 2 * sizeof(Matrix4), &rotation, sizeof(rotation));
 
         // New GUI stuff
-        reset_gui_state(*gui_state);
-        gui::draw_edit(*gui_state, { 10, 200, 200, 30 }, text_buffer, text_bytes);
+        frame_reset_gui_state(*gui_state);
+        gui::draw_edit(*gui_state, { 0, 0, 200, 30 }, text_buffer, text_bytes);
 
         // Triangle rendering
         command_list.reset(&pso);
@@ -189,6 +185,7 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
 
         rt_buffer->Release();
 
+        gui::check_controls_defocused(*gui_state);
         std::this_thread::sleep_for(std::chrono::milliseconds(16));
     }
 

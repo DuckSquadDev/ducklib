@@ -263,12 +263,13 @@ uint32_t generate_text_quads(
         auto y0 = static_cast<float>(caret_y - glyph_info.height);
         auto y1 = static_cast<float>(caret_y);
 
-        vertex_buffer[i * 6 + 0] = gui::GuiVertex { x0, y0, glyph_info.u0, glyph_info.v0 };
-        vertex_buffer[i * 6 + 1] = gui::GuiVertex { x1, y0, glyph_info.u1, glyph_info.v0 };
-        vertex_buffer[i * 6 + 2] = gui::GuiVertex { x0, y1, glyph_info.u0, glyph_info.v1 };
-        vertex_buffer[i * 6 + 3] = gui::GuiVertex { x0, y1, glyph_info.u0, glyph_info.v1 };
-        vertex_buffer[i * 6 + 4] = gui::GuiVertex { x1, y0, glyph_info.u1, glyph_info.v0 };
-        vertex_buffer[i * 6 + 5] = gui::GuiVertex { x1, y1, glyph_info.u1, glyph_info.v1 };
+        float color[] = { 0.4f, 0.7f, 0.0f, 1.0f };
+        vertex_buffer[i * 6 + 0] = gui::GuiVertex { x0, y0, glyph_info.u0, glyph_info.v0, color[0], color[1], color[2], color[3] };
+        vertex_buffer[i * 6 + 1] = gui::GuiVertex { x1, y0, glyph_info.u1, glyph_info.v0, color[0], color[1], color[2], color[3] };
+        vertex_buffer[i * 6 + 2] = gui::GuiVertex { x0, y1, glyph_info.u0, glyph_info.v1, color[0], color[1], color[2], color[3] };
+        vertex_buffer[i * 6 + 3] = gui::GuiVertex { x0, y1, glyph_info.u0, glyph_info.v1, color[0], color[1], color[2], color[3] };
+        vertex_buffer[i * 6 + 4] = gui::GuiVertex { x1, y0, glyph_info.u1, glyph_info.v0, color[0], color[1], color[2], color[3] };
+        vertex_buffer[i * 6 + 5] = gui::GuiVertex { x1, y1, glyph_info.u1, glyph_info.v1, color[0], color[1], color[2], color[3] };
 
         caret_x += glyph_info.x_advance;
         ++quads_generated;
