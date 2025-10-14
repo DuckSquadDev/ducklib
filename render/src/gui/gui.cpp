@@ -39,11 +39,24 @@ bool pos_in_rect(int x, int y, Rect rect) {
     return false;
 }
 
-void modify_text_from_input(std::span<char8_t> text_buffer, uint32_t& text_bytes, std::span<char8_t> inputs) {
+void gui_process_text_inputs(std::span<char8_t> text_buffer, uint32_t& text_bytes, GuiState& gui_state) {
+    if (!gui_state.input_state) {
+        return;
+    }
+    
+    auto inputs = gui_state.input_state->text_inputs;
     auto text_input_bytes = inputs.size();
+    auto keep_going = true;
+    auto i = 0;
 
-    for (auto i = 0; i < text_input_bytes;) {
+    while (i < text_input_bytes && keep_going) {
         switch (inputs[i]) {
+        case 0x1b: {
+            gui_state.focused_id = GUI_INVALID_ID;
+            keep_going = false;
+            ++i;
+            break;
+        }
         case 0x8: {
             // Backspace
             if (text_bytes == 0) {
@@ -64,6 +77,8 @@ void modify_text_from_input(std::span<char8_t> text_buffer, uint32_t& text_bytes
         }
         }
     }
+
+    inputs.erase(inputs.begin(), inputs.begin() + i);
 }
 
 bool check_hover(const GuiState& gui_state, Rect rect) {
@@ -105,8 +120,7 @@ void draw_edit(GuiState& gui_state, Rect rect, std::span<char8_t> text_buffer, u
 
     if (id == gui_state.focused_id) {
         if (gui_state.input_state) {
-            modify_text_from_input(text_buffer, text_bytes, gui_state.input_state->text_inputs);
-            gui_state.input_state->text_inputs.clear();
+            gui_process_text_inputs(text_buffer, text_bytes, gui_state);
         }
         color = DEF_RECT_COLOR_HL2;
     } else if (check_hover(gui_state, rect)) {
