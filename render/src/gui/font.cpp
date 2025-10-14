@@ -242,7 +242,7 @@ uint32_t generate_text_quads(
     constexpr auto glyph_stride = 6 * sizeof(gui::GuiVertex);
     auto caret_x = x;
     auto caret_y = y + atlas.ascent; // TODO: Fix y-offset (y is top-left of element, probably, which is bad here)
-    auto quads_generated = 0;
+    auto g = 0; // glyphs written
 
     if (text.length() * glyph_stride > vertex_buffer_size) {
         // TODO: Handle error better
@@ -267,17 +267,17 @@ uint32_t generate_text_quads(
         auto y1 = static_cast<float>(caret_y + glyph_info.y_offset + glyph_info.height);
 
         float color[] = { 0.4f, 0.7f, 0.0f, 1.0f };
-        vertex_buffer[i * 6 + 0] = gui::GuiVertex { x0, y0, glyph_info.u0, glyph_info.v0, color[0], color[1], color[2], color[3] };
-        vertex_buffer[i * 6 + 1] = gui::GuiVertex { x1, y0, glyph_info.u1, glyph_info.v0, color[0], color[1], color[2], color[3] };
-        vertex_buffer[i * 6 + 2] = gui::GuiVertex { x0, y1, glyph_info.u0, glyph_info.v1, color[0], color[1], color[2], color[3] };
-        vertex_buffer[i * 6 + 3] = gui::GuiVertex { x0, y1, glyph_info.u0, glyph_info.v1, color[0], color[1], color[2], color[3] };
-        vertex_buffer[i * 6 + 4] = gui::GuiVertex { x1, y0, glyph_info.u1, glyph_info.v0, color[0], color[1], color[2], color[3] };
-        vertex_buffer[i * 6 + 5] = gui::GuiVertex { x1, y1, glyph_info.u1, glyph_info.v1, color[0], color[1], color[2], color[3] };
+        vertex_buffer[g * 6 + 0] = gui::GuiVertex { x0, y0, glyph_info.u0, glyph_info.v0, color[0], color[1], color[2], color[3] };
+        vertex_buffer[g * 6 + 1] = gui::GuiVertex { x1, y0, glyph_info.u1, glyph_info.v0, color[0], color[1], color[2], color[3] };
+        vertex_buffer[g * 6 + 2] = gui::GuiVertex { x0, y1, glyph_info.u0, glyph_info.v1, color[0], color[1], color[2], color[3] };
+        vertex_buffer[g * 6 + 3] = gui::GuiVertex { x0, y1, glyph_info.u0, glyph_info.v1, color[0], color[1], color[2], color[3] };
+        vertex_buffer[g * 6 + 4] = gui::GuiVertex { x1, y0, glyph_info.u1, glyph_info.v0, color[0], color[1], color[2], color[3] };
+        vertex_buffer[g * 6 + 5] = gui::GuiVertex { x1, y1, glyph_info.u1, glyph_info.v1, color[0], color[1], color[2], color[3] };
 
         caret_x += glyph_info.x_advance;
-        ++quads_generated;
+        ++g;
     }
 
-    return quads_generated;
+    return g;
 }
 }
