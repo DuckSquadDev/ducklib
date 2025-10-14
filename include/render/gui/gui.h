@@ -14,9 +14,9 @@ constexpr uint32_t GUI_INVALID_ID = -1;
 constexpr float DEF_RECT_COLOR[] = { 0.3f, 0.3f, 0.3f, 1.0f };
 constexpr float DEF_RECT_COLOR_HL[] = { 0.5f, 0.5f, 0.5f, 1.0f };
 constexpr float DEF_RECT_COLOR_HL2[] = { 0.2f, 0.5f, 0.5f, 1.0f };
-constexpr float DEF_BUTTON_COLOR[] = { 0.3f, 0.5f, 0.5f, 1.0f };
-constexpr float DEF_BUTTON_HOVER_COLOR[] = { 0.5f, 0.7f, 0.7f, 1.0f };
-constexpr float DEF_BUTTON_ACTIVE_COLOR[] = { 0.5f, 0.6f, 0.8f, 1.0f };
+constexpr float DEF_BUTTON_COLOR[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+constexpr float DEF_BUTTON_HOVER_COLOR[] = { 0.2f, 0.3f, 0.3f, 1.0f };
+constexpr float DEF_BUTTON_ACTIVE_COLOR[] = { 0.2f, 0.5f, 0.3f, 1.0f };
 
 struct GuiVertex {
     float x, y;
@@ -25,7 +25,7 @@ struct GuiVertex {
 };
 
 struct GuiState {
-    static constexpr auto SHAPE_BUFFER_SIZE = 1024;
+    static constexpr auto SHAPE_BUFFER_SIZE = 4096;
     static constexpr auto TEXT_BUFFER_SIZE = 1048576;
 
     uint32_t id_counter = 0;

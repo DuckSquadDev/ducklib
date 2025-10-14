@@ -27,7 +27,7 @@ void draw_label(GuiState& gui_state, Rect rect, std::u8string_view text) {
         rect.y,
         &gui_state.text_staging_vbuffer[gui_state.text_staged_vertex_count],
         remaining_text_vertices);
-    gui_state.shape_staged_vertex_count += quads_rendered * 6;
+    gui_state.text_staged_vertex_count += quads_rendered * 6;
 }
 
 bool pos_in_rect(int x, int y, Rect rect) {
@@ -147,7 +147,7 @@ void draw_button(GuiState& gui_state, Rect rect, std::u8string_view text, std::f
         rect.y,
         &gui_state.text_staging_vbuffer[gui_state.text_staged_vertex_count],
         remaining_text_vertices);
-    gui_state.shape_staged_vertex_count += quads_rendered * 6;
+    gui_state.text_staged_vertex_count += quads_rendered * 6;
 }
 
 void create_glyph_atlas_texture(

@@ -115,7 +115,7 @@ enum class PrimitiveTopology {
 };
 
 #undef GENERIC_READ
-enum ResourceState {
+enum class ResourceState {
     COMMON = 0,
     VERTEX_AND_CONSTANT_BUFFER = 0x1,
     INDEX_BUFFER = 0x2,
