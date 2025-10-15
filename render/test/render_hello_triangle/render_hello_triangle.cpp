@@ -31,7 +31,6 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     render::SwapChain swap_chain = {};
     render::Adapter adapters[1] = {};
     render::Device device = {};
-    render::CommandQueue queue = {};
     render::CommandList command_list = {};
     render::Buffer v_buffer = {};
     render::Buffer c_buffer = {};
@@ -45,7 +44,6 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     render::PsoDesc pso_desc = {};
     render::Pso pso = {};
     render::Fence fence = {};
-    render::Descriptor rt_descriptors[2] = {};
     uint32_t frame_index = 0;
     ID3D12Resource* back_buffer = nullptr;
 
@@ -54,7 +52,6 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     create_rhi(rhi);
     rhi.enumerate_adapters(adapters, 1);
     rhi.create_device(adapters[0], device);
-    device.create_queue(render::QueueType::GRAPHICS, queue);
     device.create_command_list(render::QueueType::GRAPHICS, command_list);
 
     compile_shader(L"shaders.hlsl", render::ShaderType::VERTEX, "vs_main", &vertex_shader);
@@ -88,15 +85,7 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     device.create_descriptor_heap(render::DescriptorHeapType::CBV_SRV_UAV, 128, resource_descriptor_heap);
     device.create_fence(frame_index, fence);
 
-    rhi.create_swap_chain(queue, width, height, render::Format::R8G8B8A8_UNORM, window.hwnd(), swap_chain);
-    rt_descriptors[0] = { .cpu_handle = rt_descriptor_heap.cpu_handle(0) };
-    swap_chain.d3d12_swap_chain->GetBuffer(0, IID_PPV_ARGS(&back_buffer));
-    device.create_rt_descriptor(back_buffer, nullptr, rt_descriptors[0]);
-    back_buffer->Release();
-    rt_descriptors[1] = { .cpu_handle = rt_descriptor_heap.cpu_handle(1) };
-    swap_chain.d3d12_swap_chain->GetBuffer(1, IID_PPV_ARGS(&back_buffer));
-    device.create_rt_descriptor(back_buffer, nullptr, rt_descriptors[1]);
-    back_buffer->Release();
+    rhi.create_swap_chain(device, rt_descriptor_heap, 2, width, height, render::Format::R8G8B8A8_UNORM, window.hwnd(), swap_chain);
 
     auto view = Matrix4::look_at_lh(
         { 0.0f, 0.0f, -2.0f },
@@ -113,9 +102,8 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     while (window.is_open()) {
         window.process_messages();
 
-        uint32_t rt = frame_index % 2;
-        ID3D12Resource* rt_buffer = nullptr;
-        swap_chain.d3d12_swap_chain->GetBuffer(rt, IID_PPV_ARGS(&rt_buffer));
+        auto& rt_buffer = swap_chain.current_buffer();
+        auto rt_descriptor = swap_chain.current_buffer_descriptor();
         constexpr float clear_color[] = { 0.0f, 0.2f, 0.4f, 1.0f };
 
         static auto rotate_20 = Matrix4::rotation_y(deg_to_rad(2));
@@ -127,27 +115,23 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
         command_list.set_viewport(0.0f, 0.0f, width, height);
         command_list.set_scissor_rect(0.0f, 0.0f, width, height);
         command_list.resource_barrier(rt_buffer, render::ResourceState::PRESENT, render::ResourceState::RENDER_TARGET);
-        command_list.set_rt(rt_descriptors[rt]);
-        command_list.clear_rt(rt_descriptors[rt], clear_color);
+        command_list.set_rt(rt_descriptor);
+        command_list.clear_rt(rt_descriptor, clear_color);
         command_list.set_primitive_topology(render::PrimitiveTopology::TRIANGLE);
         command_list.set_constant_buffer(0, c_buffer);
         command_list.set_vertex_buffer(v_buffer, sizeof(Vertex));
         command_list.draw(3, 0);
         command_list.resource_barrier(rt_buffer, render::ResourceState::RENDER_TARGET, render::ResourceState::PRESENT);
         command_list.close();
-        queue.execute(command_list);
+        device.graphics_queue.execute(command_list);
         swap_chain.present();
-        queue.signal(fence, frame_index);
+        device.graphics_queue.signal(fence, frame_index);
         fence.set_completion_value(frame_index);
         fence.wait();
         frame_index++;
 
-        rt_buffer->Release();
-
         std::this_thread::sleep_for(std::chrono::milliseconds(8));
     }
-
-    swap_chain.d3d12_swap_chain->Release();
 
     return 0;
 }

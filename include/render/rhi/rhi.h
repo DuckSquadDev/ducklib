@@ -27,7 +27,9 @@ struct Rhi {
     auto enumerate_adapters(Adapter* out_adapters, uint32_t max_adapter_count) -> uint32_t;
     void create_device(const Adapter& adapter, Device& out_device);
     void create_swap_chain(
-        const CommandQueue& command_queue,
+        Device& device,
+        DescriptorHeap& descriptor_heap,
+        uint8_t buffer_count,
         uint32_t width,
         uint32_t height,
         Format format,

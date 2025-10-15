@@ -233,9 +233,17 @@ struct Pso {
 };
 
 struct SwapChain {
-    IDXGISwapChain1* d3d12_swap_chain = nullptr;
+    static constexpr auto MAX_BUFFERS = 16;
+    
+    ComPtr<IDXGISwapChain1> d3d12_swap_chain;
+    Descriptor buffer_descriptors[MAX_BUFFERS];
+    Texture buffers[MAX_BUFFERS];
+    uint64_t frame_index = 0;
+    uint8_t buffer_count;
 
     void present();
+    Texture& current_buffer();
+    Descriptor current_buffer_descriptor() const;
 };
 
 struct Fence {
@@ -273,6 +281,7 @@ struct CommandList {
     void clear_rt(const Descriptor& rt_descriptor, const float color[4]);
 
     void resource_barrier(void* d3d12_resource, ResourceState start_state, ResourceState end_state);
+    void resource_barrier(const Texture& texture, ResourceState start_state, ResourceState end_state);
 };
 
 struct CommandQueue {

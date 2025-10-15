@@ -7,6 +7,16 @@ void SwapChain::present() {
     if (FAILED(d3d12_swap_chain->Present(0, 0))) {
         std::abort();
     }
+    
+    ++frame_index;
+}
+
+Texture& SwapChain::current_buffer() {
+    return buffers[frame_index % buffer_count];
+}
+
+Descriptor SwapChain::current_buffer_descriptor() const {
+    return buffer_descriptors[frame_index % buffer_count];
 }
 
 void Fence::set_completion_value(uint64_t value) {
@@ -151,6 +161,19 @@ void CommandList::resource_barrier(void* d3d12_resource, ResourceState start_sta
     barrier_desc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     barrier_desc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
     barrier_desc.Transition.pResource = static_cast<ID3D12Resource*>(d3d12_resource);
+    barrier_desc.Transition.StateBefore = static_cast<D3D12_RESOURCE_STATES>(start_state);
+    barrier_desc.Transition.StateAfter = static_cast<D3D12_RESOURCE_STATES>(end_state);
+    barrier_desc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+    d3d12_list->ResourceBarrier(1, &barrier_desc);
+}
+
+void CommandList::resource_barrier(const Texture& texture, ResourceState start_state, ResourceState end_state) {
+    D3D12_RESOURCE_BARRIER barrier_desc = {};
+
+    barrier_desc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrier_desc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    barrier_desc.Transition.pResource = texture.d3d12_resource.Get();
     barrier_desc.Transition.StateBefore = static_cast<D3D12_RESOURCE_STATES>(start_state);
     barrier_desc.Transition.StateAfter = static_cast<D3D12_RESOURCE_STATES>(end_state);
     barrier_desc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
