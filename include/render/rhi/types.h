@@ -17,12 +17,12 @@ namespace ducklib::render {
 constexpr auto MAX_RT_COUNT = 8;
 
 struct Adapter {
-    ComPtr<IDXGIAdapter1> dxgi_adapter = nullptr;
+    ComPtr<IDXGIAdapter1> dxgi_adapter;
     char name[128] = {};
 };
 
 struct Buffer {
-    ID3D12Resource1* d3d12_resource = nullptr;
+    ComPtr<ID3D12Resource1> d3d12_resource;
     uint64_t size;
 
     void map(void** out_ptr) {
@@ -35,17 +35,17 @@ struct Buffer {
 };
 
 struct Texture {
-    ID3D12Resource1* d3d12_resource = nullptr;
+    ComPtr<ID3D12Resource1> d3d12_resource;
     uint32_t width;
     uint32_t height;
     Format format;
 
     void map(void** out_ptr) {
-        DL_CHECK_D3D(d3d12_resource->Map(0, nullptr, out_ptr));
+        DL_CHECK_D3D(d3d12_resource.Get()->Map(0, nullptr, out_ptr));
     }
 
     void unmap() {
-        d3d12_resource->Unmap(0, nullptr);
+        d3d12_resource.Get()->Unmap(0, nullptr);
     }
 };
 
@@ -55,7 +55,7 @@ struct Descriptor {
 };
 
 struct DescriptorHeap {
-    ID3D12DescriptorHeap* d3d12_heap = nullptr;
+    ComPtr<ID3D12DescriptorHeap> d3d12_heap;
     D3D12_CPU_DESCRIPTOR_HANDLE first_cpu_handle = {};
     D3D12_GPU_DESCRIPTOR_HANDLE first_gpu_handle = {};
     uint16_t descriptor_size;
@@ -84,7 +84,7 @@ struct DescriptorHeap {
 };
 
 struct Shader {
-    ID3DBlob* d3d_bytecode_blob = nullptr;
+    ComPtr<ID3DBlob> d3d_bytecode_blob;
     ShaderType type;
 };
 
@@ -159,7 +159,7 @@ struct BindingSetDesc {
 };
 
 struct BindingSet {
-    ID3D12RootSignature* d3d12_signature;
+    ComPtr<ID3D12RootSignature> d3d12_signature;
 };
 
 struct RasterizerDesc {
@@ -229,7 +229,7 @@ struct PsoDesc {
 };
 
 struct Pso {
-    ID3D12PipelineState* d3d12_pso = nullptr;
+    ComPtr<ID3D12PipelineState> d3d12_pso;
 };
 
 struct SwapChain {
@@ -239,7 +239,7 @@ struct SwapChain {
 };
 
 struct Fence {
-    ID3D12Fence1* d3d12_fence = nullptr;
+    ComPtr<ID3D12Fence1> d3d12_fence;
     HANDLE event_handle = {};
 
     void set_completion_value(uint64_t value);
@@ -247,8 +247,8 @@ struct Fence {
 };
 
 struct CommandList {
-    ComPtr<ID3D12CommandAllocator> d3d12_alloc = nullptr;
-    ComPtr<ID3D12GraphicsCommandList2> d3d12_list = nullptr;
+    ComPtr<ID3D12CommandAllocator> d3d12_alloc;
+    ComPtr<ID3D12GraphicsCommandList2> d3d12_list;
     QueueType type;
 
     void close();

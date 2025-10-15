@@ -289,7 +289,7 @@ void Device::create_pso(const BindingSet& binding_set, const PsoDesc& pso_desc, 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC d3d12_pso_desc = {};
     D3D12_INPUT_ELEMENT_DESC d3d12_input_elements[32] = {};
 
-    d3d12_pso_desc.pRootSignature = binding_set.d3d12_signature;
+    d3d12_pso_desc.pRootSignature = binding_set.d3d12_signature.Get();
     d3d12_pso_desc.VS = to_d3d12_bytecode(pso_desc.vertex_shader);
     d3d12_pso_desc.PS = to_d3d12_bytecode(pso_desc.pixel_shader);
     d3d12_pso_desc.GS = to_d3d12_bytecode(pso_desc.geometry_shader);

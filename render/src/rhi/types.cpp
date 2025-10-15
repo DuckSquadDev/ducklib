@@ -30,18 +30,18 @@ void CommandList::reset(const Pso* pso) {
         std::abort();
     }
 
-    ID3D12PipelineState* d3d12_pso = pso != nullptr ? pso->d3d12_pso : nullptr;
+    ID3D12PipelineState* d3d12_pso = pso != nullptr ? pso->d3d12_pso.Get() : nullptr;
     if (FAILED(d3d12_list->Reset(d3d12_alloc.Get(), d3d12_pso))) {
         std::abort();
     }
 }
 
 void CommandList::set_pso(const Pso& pso) {
-    d3d12_list->SetPipelineState(pso.d3d12_pso);
+    d3d12_list->SetPipelineState(pso.d3d12_pso.Get());
 }
 
 void CommandList::set_binding_set(const BindingSet& binding_set) {
-    d3d12_list->SetGraphicsRootSignature(binding_set.d3d12_signature);
+    d3d12_list->SetGraphicsRootSignature(binding_set.d3d12_signature.Get());
 }
 
 void CommandList::set_descriptor_heaps(uint32_t heap_count, DescriptorHeap** heaps) {
@@ -49,7 +49,7 @@ void CommandList::set_descriptor_heaps(uint32_t heap_count, DescriptorHeap** hea
     ID3D12DescriptorHeap* d3d12_heaps[2];
 
     for (auto i = 0; i < heap_count; ++i) {
-        d3d12_heaps[i] = heaps[i]->d3d12_heap;
+        d3d12_heaps[i] = heaps[i]->d3d12_heap.Get();
     }
     
     d3d12_list->SetDescriptorHeaps(heap_count, d3d12_heaps);
@@ -103,10 +103,10 @@ void CommandList::copy_texture(Texture& dest, uint32_t dest_x, uint32_t dest_y, 
     D3D12_TEXTURE_COPY_LOCATION dest_desc = {};
     D3D12_TEXTURE_COPY_LOCATION source_desc = {};
 
-    dest_desc.pResource = dest.d3d12_resource;
+    dest_desc.pResource = dest.d3d12_resource.Get();
     dest_desc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
     dest_desc.SubresourceIndex = 0;
-    source_desc.pResource = source.d3d12_resource;
+    source_desc.pResource = source.d3d12_resource.Get();
     source_desc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
     source_desc.SubresourceIndex = 0;
     
@@ -127,10 +127,10 @@ void CommandList::copy_texture(Texture& dest, uint32_t dest_x, uint32_t dest_y, 
 
     d3d12_device->GetCopyableFootprints(&dest_resource_desc, 0, 1, 0, &upload_buffer_footprint, &row_count, &row_size, &total_bytes);
 
-    dest_desc.pResource = dest.d3d12_resource;
+    dest_desc.pResource = dest.d3d12_resource.Get();
     dest_desc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
     dest_desc.SubresourceIndex = 0;
-    source_desc.pResource = source.d3d12_resource;
+    source_desc.pResource = source.d3d12_resource.Get();
     source_desc.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
     source_desc.PlacedFootprint = upload_buffer_footprint;
 
@@ -159,7 +159,7 @@ void CommandList::resource_barrier(void* d3d12_resource, ResourceState start_sta
 }
 
 void CommandQueue::signal(const Fence& fence, uint64_t value) {
-    if (FAILED(d3d12_queue->Signal(fence.d3d12_fence, value))) {
+    if (FAILED(d3d12_queue->Signal(fence.d3d12_fence.Get(), value))) {
         std::abort();
     }
 }

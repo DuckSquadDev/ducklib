@@ -190,7 +190,7 @@ void create_glyph_atlas_texture(
     gui_state.glyph_atlas = atlas_info;
     gui_state.glyph_atlas_descriptor = srv_heap.allocate();
     gui_state.glyph_sampler_descriptor = sampler_heap.allocate();
-    device.create_srv_descriptor(gui_state.glyph_atlas_texture.d3d12_resource, nullptr, gui_state.glyph_atlas_descriptor);
+    device.create_srv_descriptor(gui_state.glyph_atlas_texture.d3d12_resource.Get(), nullptr, gui_state.glyph_atlas_descriptor);
     device.create_sampler(render::Filter::MIN_MAG_MIP_LINEAR, gui_state.glyph_sampler_descriptor);
 
     render::CommandList copy_list = {};
@@ -200,12 +200,12 @@ void create_glyph_atlas_texture(
 
     copy_list.reset();
     copy_list.resource_barrier(
-        gui_state.glyph_atlas_texture.d3d12_resource,
+        gui_state.glyph_atlas_texture.d3d12_resource.Get(),
         render::ResourceState::COMMON,
         render::ResourceState::COPY_DEST);
     copy_list.copy_texture(gui_state.glyph_atlas_texture, 0, 0, upload_buffer);
     copy_list.resource_barrier(
-        gui_state.glyph_atlas_texture.d3d12_resource,
+        gui_state.glyph_atlas_texture.d3d12_resource.Get(),
         render::ResourceState::COPY_DEST,
         render::ResourceState::COMMON);
     copy_list.close();

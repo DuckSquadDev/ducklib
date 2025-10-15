@@ -62,7 +62,7 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
     InputState input_state = {};
     register_raw_win_input(window.hwnd());
     window.register_message_callback(
-        [&input_state] (AppWindow* app_window, uint32_t msg, WPARAM wParam, LPARAM lParam) {
+        [&input_state](AppWindow* app_window, uint32_t msg, WPARAM wParam, LPARAM lParam) {
             process_win_input(app_window, input_state, msg, wParam, lParam);
         });
 
@@ -157,10 +157,14 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
         // New GUI stuff
         frame_reset_gui_state(*gui_state);
         gui::draw_edit(*gui_state, { 40, 20, 200, 30 }, text_buffer, text_bytes);
-        gui::draw_button(*gui_state, { 40, 80, 100, 30 }, u8"click me", [] {
-            std::println("clicked");
-            std::cout.flush();
-        });
+        gui::draw_button(
+            *gui_state,
+            { 40, 80, 100, 30 },
+            u8"click me",
+            [] {
+                std::println("clicked");
+                std::cout.flush();
+            });
 
         // Triangle rendering
         command_list.reset(&pso);
@@ -195,16 +199,7 @@ int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*
 
     delete gui_state;
 
-    c_buffer.d3d12_resource->Release();
-    fence.d3d12_fence->Release();
     swap_chain.d3d12_swap_chain->Release();
-    resource_descriptor_heap.d3d12_heap->Release();
-    rt_descriptor_heap.d3d12_heap->Release();
-    v_buffer.d3d12_resource->Release();
-    pso.d3d12_pso->Release();
-    binding_set.d3d12_signature->Release();
-    pixel_shader.d3d_bytecode_blob->Release();
-    vertex_shader.d3d_bytecode_blob->Release();
 
     unregister_raw_win_input();
 
