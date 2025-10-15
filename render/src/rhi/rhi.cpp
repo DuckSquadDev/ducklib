@@ -54,29 +54,48 @@ void Rhi::create_device(const Adapter& adapter, Device& out_device) {
 }
 
 void Rhi::create_swap_chain(
-    const CommandQueue& command_queue,
+    Device& device,
+    DescriptorHeap& descriptor_heap,
+    uint8_t buffer_count,
     uint32_t width,
     uint32_t height,
     Format format,
     HWND window_handle,
     SwapChain& out_swap_chain) {
+
+    if (descriptor_heap.type != DescriptorHeapType::RT) {
+        throw std::runtime_error("Incorrect descriptor heap type provided to swap chain creation");
+    }
+    
     DXGI_SWAP_CHAIN_DESC1 desc = {};
 
     desc.Format = to_d3d12_format(format);
     desc.Width = width;
     desc.Height = height;
     desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    desc.BufferCount = 2;
+    desc.BufferCount = buffer_count;
     desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
     desc.SampleDesc.Count = 1;
 
     DL_CHECK_D3D(
         dxgi_factory->CreateSwapChainForHwnd(
-            command_queue.d3d12_queue.Get(),
+            device.graphics_queue.d3d12_queue.Get(),
             window_handle,
             &desc,
             nullptr,
             nullptr,
             &out_swap_chain.d3d12_swap_chain));
+
+    ID3D12Resource1* buffer;
+    
+    for (auto i = 0; i < buffer_count; ++i) {
+        out_swap_chain.d3d12_swap_chain->GetBuffer(i, IID_PPV_ARGS(&buffer));
+        out_swap_chain.buffers[i] = { buffer, width, height, format };
+        out_swap_chain.buffer_descriptors[i] = descriptor_heap.allocate();
+        device.create_rt_descriptor(buffer, nullptr, out_swap_chain.buffer_descriptors[i]);
+        buffer->Release();
+    }
+
+    out_swap_chain.buffer_count = buffer_count;
 }
 }
