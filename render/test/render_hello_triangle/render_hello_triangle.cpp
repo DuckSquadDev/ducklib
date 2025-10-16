@@ -26,7 +26,7 @@ void output(std::string_view message, LogLevel level, std::source_location sourc
 }
 
 int __stdcall WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char* cmdLine, int cmdShow) {
-    WinAppWindow window{ "Hello world!", width, height };
+    WinAppWindow window{ "Hello world!", width, height };   
     render::Rhi rhi = {};
     render::SwapChain swap_chain = {};
     render::Adapter adapters[1] = {};

@@ -36,7 +36,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
         $<$<CONFIG:RelWithDebInfo>:/Zi /O2>
         $<$<CONFIG:Release>:/O2 /DNDEBUG>
 )
-target_include_directories(${PROJECT_NAME} PRIVATE ../include)
+target_include_directories(${PROJECT_NAME} PUBLIC ../include)
 set_target_properties(${PROJECT_NAME} PROPERTIES
         PREFIX ""
         OUTPUT_NAME ${PROJECT_NAME}
