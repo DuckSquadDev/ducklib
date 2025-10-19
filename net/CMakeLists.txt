@@ -17,7 +17,12 @@ add_library(${PROJECT_NAME} STATIC
         ../include/net/net_buffer_writer.h
         src/net_buffer_writer.cpp
         ../include/net/net_buffer_reader.h
-        src/net_buffer_reader.cpp)
+        src/net_buffer_reader.cpp
+        ../include/net/connection.h
+        src/connection.cpp
+        ../include/net/serialization.h
+        src/serialization.cpp
+)
 target_compile_options(${PROJECT_NAME} PRIVATE
         $<$<CONFIG:Debug>:/Zi /Od>
         $<$<CONFIG:RelWithDebInfo>:/Zi /O2>
