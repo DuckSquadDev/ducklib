@@ -12,12 +12,6 @@ add_library(${PROJECT_NAME} STATIC
         src/Net.cpp
         src/Shared.cpp
         src/Socket.cpp
-        src/net_client.cpp
-        ../include/net/net_client.h
-        ../include/net/net_buffer_writer.h
-        src/net_buffer_writer.cpp
-        ../include/net/net_buffer_reader.h
-        src/net_buffer_reader.cpp
         ../include/net/connection.h
         src/connection.cpp
         ../include/net/serialization.h

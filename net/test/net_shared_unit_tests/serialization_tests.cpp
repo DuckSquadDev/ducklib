@@ -7,8 +7,8 @@ using namespace ducklib;
 
 template <typename StreamT>
 void small_serialization(StreamT& stream, int& first, int& second) {
-    net::serialize(stream, first, 10, 200);
-    net::serialize(stream, second, 60, 70);
+    net::serialize_int(stream, first, 10, 200);
+    net::serialize_int(stream, second, 60, 70);
 }
 
 TEST(serialization_tests, SmallSerialization_WithinScratchSize) {
