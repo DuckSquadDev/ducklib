@@ -72,7 +72,9 @@ private:
 };
 
 template <typename T>
-MessageIdType Connection::send_reliable(T& message, uint8_t type, uint8_t priority) {}
+MessageIdType Connection::send_reliable(T& message, uint8_t type, bool ordered, uint8_t priority) {
+    return 0;
+}
 }
 
 #endif //DUCKLIB_CONNECTION_H

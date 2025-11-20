@@ -33,7 +33,7 @@ auto net_to_host(T value) -> T {
 
 struct NetWriteStream {
     std::span<std::byte> buffer;
-    uint32_t bits_written = 0;
+    uint32_t bits_written = 0; // Not including scratch_bits
     ScratchType scratch = 0;
     uint8_t scratch_bits = 0;
 
@@ -82,7 +82,8 @@ bool NetWriteStream::serialize_value(T value, uint8_t bits) {
 
 struct NetReadStream {
     std::span<std::byte> buffer;
-    uint32_t bytes_read = 0;
+    uint32_t bit_size = 0;
+    uint32_t bits_read = 0; // Not including scratch_bits
     ScratchType scratch = 0;
     uint8_t scratch_bits = 0;
 
@@ -95,11 +96,10 @@ struct NetReadStream {
 
     template <std::integral T>
     bool serialize_value(T& value, uint8_t bits);
-    bool copy_serialized_bits(std::byte* data, uint16_t data_bit_size);
+    bool serialize_data(std::byte* data, uint16_t data_bit_size);
     void align_to_byte();
     uint16_t bits_left() const;
     bool read_scratch();
-    bool read_scratch_no_flip();
 
     static constexpr bool can_write() { return false; }
     static constexpr bool can_read() { return true; }

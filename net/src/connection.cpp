@@ -49,6 +49,6 @@ void Connection::serialize(NetWriteStream& writer, PacketMessage& message) {
         serialize_int(writer, message.id, static_cast<PacketIdType>(0), static_cast<PacketIdType>(2));
     }
     serialize_int(writer, message.data_bit_size, static_cast<uint16_t>(0), MTU);
-    serialize_block(writer, message.data, message.data_bit_size);
+    serialize_data(writer, message.data.get(), message.data_bit_size);
 }
 }
