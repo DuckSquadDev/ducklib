@@ -4,6 +4,7 @@
 #include <concepts>
 #include <span>
 #include <algorithm>
+#include <cmath>
 
 namespace ducklib::net {
 #define DL_NET_CHECK(expr) \
@@ -60,6 +61,11 @@ struct NetWriteStream {
 template <std::integral T>
 bool NetWriteStream::serialize_value(T value, uint8_t bits) {
     [[unlikely]]
+    if (bits > bits_left()) {
+        return false;
+    }
+    
+    [[unlikely]]
     if (scratch_bits == SCRATCH_SIZE_BITS) {
         DL_NET_CHECK(flush_scratch());
     }
@@ -81,17 +87,16 @@ bool NetWriteStream::serialize_value(T value, uint8_t bits) {
 }
 
 struct NetReadStream {
-    std::span<std::byte> buffer;
+    std::span<const std::byte> buffer;
     uint32_t bit_size = 0;
     uint32_t bits_read = 0; // Not including scratch_bits
     ScratchType scratch = 0;
     uint8_t scratch_bits = 0;
 
-    NetReadStream(std::span<std::byte> buffer) {
-        assert((buffer.size_bytes() & (sizeof(scratch) - 1)) == 0);
-        assert(buffer.size_bytes() >= sizeof(scratch));
-        this->buffer = buffer;
-        scratch = net_to_host(*reinterpret_cast<ScratchType*>(buffer.data()));
+    NetReadStream(const std::byte* data, uint32_t bit_size)
+        : buffer(data, static_cast<size_t>(std::ceil(bit_size / 8.0)))
+        , bit_size(bit_size) {
+        read_scratch();
     }
 
     template <std::integral T>
@@ -111,7 +116,7 @@ bool NetReadStream::serialize_value(T& value, uint8_t bits) {
     if (scratch_bits == sizeof(scratch) * 8) {
         DL_NET_CHECK(read_scratch());
     }
-    
+
     auto remaining_scratch_bits = static_cast<uint8_t>(sizeof(scratch) * 8 - scratch_bits);
     auto mask = (1ULL << bits) - 1;
     auto read_value = static_cast<T>((scratch >> scratch_bits) & mask);
@@ -140,20 +145,20 @@ template <typename StreamType, std::integral T>
 bool serialize_int(StreamType& stream, T& value, T min, T max) {
     auto bits = static_cast<uint8_t>(std::bit_width(static_cast<uint64_t>(max - min)));
     T serialization_value = 0;
-    
+
     if constexpr (stream.can_write()) {
         assert(min <= value && value <= max);
         T relative_value = value - min;
         serialization_value = relative_value;
     }
-    
+
     DL_NET_CHECK(stream.serialize_value(serialization_value, bits));
 
     if constexpr (stream.can_read()) {
         value = serialization_value + min;
         assert(min <= value && value <= max);
     }
-    
+
     return true;
 }
 
