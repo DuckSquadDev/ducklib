@@ -89,9 +89,10 @@ bool NetWriteStream::serialize_value(T value, uint8_t bits) {
 struct NetReadStream {
     std::span<const std::byte> buffer;
     uint32_t bit_size = 0;
-    uint32_t bits_read = 0; // Not including scratch_bits
+    uint32_t bits_read = 0;
     ScratchType scratch = 0;
-    uint8_t scratch_bits = 0;
+    uint8_t scratch_bits = 0;          // Total bits loaded in scratch
+    uint8_t scratch_bits_consumed = 0; // Bits consumed from scratch
 
     NetReadStream(const std::byte* data, uint32_t bit_size)
         : buffer(data, static_cast<size_t>(std::ceil(bit_size / 8.0)))
@@ -113,22 +114,22 @@ struct NetReadStream {
 template <std::integral T>
 bool NetReadStream::serialize_value(T& value, uint8_t bits) {
     [[unlikely]]
-    if (scratch_bits == SCRATCH_SIZE_BITS) {
+    if (scratch_bits_consumed >= scratch_bits) {
         DL_NET_CHECK(read_scratch());
     }
 
-    auto remaining_scratch_bits = static_cast<uint8_t>(SCRATCH_SIZE_BITS - scratch_bits);
+    auto scratch_bits_remaining = static_cast<uint8_t>(scratch_bits - scratch_bits_consumed);
     auto mask = ~0ULL >> (SCRATCH_SIZE_BITS - bits);
-    auto read_value = static_cast<T>((scratch >> scratch_bits) & mask);
-    auto spill_bits = static_cast<uint8_t>(bits < remaining_scratch_bits ? 0 : bits - remaining_scratch_bits);
+    auto read_value = static_cast<T>((scratch >> scratch_bits_consumed) & mask);
+    auto spill_bits = static_cast<uint8_t>(bits <= scratch_bits_remaining ? 0 : bits - scratch_bits_remaining);
 
     if (spill_bits > 0) {
         DL_NET_CHECK(read_scratch());
         auto spill_mask = ~0ULL >> (SCRATCH_SIZE_BITS - spill_bits);
-        read_value |= (scratch & spill_mask) << remaining_scratch_bits;
-        scratch_bits = spill_bits;
+        read_value |= (scratch & spill_mask) << scratch_bits_remaining;
+        scratch_bits_consumed = spill_bits;
     } else {
-        scratch_bits += bits;
+        scratch_bits_consumed += bits;
     }
 
     value = read_value;

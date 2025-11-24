@@ -104,22 +104,22 @@ bool NetReadStream::serialize_data(std::byte* data, uint16_t data_bit_size) {
     auto byte_size = std::ceil(data_bit_size / 8.0f);
 
     // Just memcpy if byte-aligned write location
-    if ((scratch_bits & 0x7) == 0) {
-        auto first_value_size = scratch_bits;
+    if ((scratch_bits_consumed & 0x7) == 0) {
+        auto first_value_size = scratch_bits - scratch_bits_consumed;
         // serialize_value(
     }
 
     return true;
 }
 void NetReadStream::align_to_byte() {
-    auto bit_offset_from_byte = scratch_bits & 0x7;
+    auto bit_offset_from_byte = scratch_bits_consumed & 0x7;
     if (bit_offset_from_byte != 0) {
-        scratch_bits += 8 - bit_offset_from_byte;
+        scratch_bits_consumed += 8 - bit_offset_from_byte;
     }
 }
 
 uint16_t NetReadStream::bits_left() const {
-    return bit_size - bits_read - scratch_bits;
+    return (bit_size - bits_read) + (scratch_bits - scratch_bits_consumed);
 }
 
 bool NetReadStream::read_scratch() {
@@ -146,8 +146,9 @@ bool NetReadStream::read_scratch() {
     }
     
     bits_read += bits_to_read;
-    scratch_bits = 0;
-    
+    scratch_bits = bits_to_read;
+    scratch_bits_consumed = 0;
+
     return true;
 }
 }
