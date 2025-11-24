@@ -122,7 +122,6 @@ TEST(serialization_tests, MultipleScratchFlushes) {
     writer.flush_scratch();
 
     auto reader = net::NetReadStream({ buffer.get(), buffer_size * 8U });
-    reader.bit_size = buffer_size * 8;
     uint64_t read1 = 0, read2 = 0, read3 = 0;
 
     ASSERT_TRUE(reader.serialize_value(read1, 64));

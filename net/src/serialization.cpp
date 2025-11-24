@@ -21,7 +21,7 @@ bool NetWriteStream::serialize_data(std::byte* data, uint32_t data_size_bits) {
         auto full_byte_count = data_size_bits / 8;
         ScratchType temp_scratch = 0;
         memcpy(&temp_scratch, data, full_byte_count);
-        auto tail_byte_mask = (1ULL << (data_size_bits - full_byte_count * 8)) - 1;
+        auto tail_byte_mask = ~0ULL >> (SCRATCH_SIZE_BITS - (data_size_bits - full_byte_count * 8));
         temp_scratch |= (static_cast<uint8_t>(data[full_byte_count]) & tail_byte_mask) << (tail_byte_mask * 8);
         scratch |= temp_scratch << scratch_bits;
         scratch_bits += data_size_bits;
@@ -29,7 +29,7 @@ bool NetWriteStream::serialize_data(std::byte* data, uint32_t data_size_bits) {
     }
     
     auto head_tail_bits = -scratch_bits & 0x7;
-    auto head_mask = (1ULL << head_tail_bits) - 1;
+    auto head_mask = ~0ULL >> (SCRATCH_SIZE_BITS - head_tail_bits);
     scratch |= (static_cast<uint8_t>(*data) & head_mask) << scratch_bits;
     scratch_bits += head_tail_bits;
     flush_scratch();
@@ -55,7 +55,7 @@ bool NetWriteStream::serialize_data(std::byte* data, uint32_t data_size_bits) {
 
     // Last part
     if (bits_to_write > 0) {
-        auto mask = (1ULL << bits_to_write) - 1;
+        auto mask = ~0ULL >> (SCRATCH_SIZE_BITS - bits_to_write);
         scratch = (static_cast<uint8_t>(data[data_bytes_written]) >> data_bit_offset) & mask;
         scratch_bits = bits_to_write;
     }
@@ -96,6 +96,7 @@ bool NetWriteStream::flush_scratch() {
     }
 
     scratch_bits = 0;
+    scratch = 0;
     return true;
 }
 
@@ -127,24 +128,25 @@ bool NetReadStream::read_scratch() {
     }
 
     assert((bits_read & 0x7) == 0 && "Bits read should be a multiple of 8 when reading a new scratch");
-    auto bytes_read = bits_read >> 3;
+    auto total_bytes_read = bits_read >> 3;
     auto bits_to_read = std::min(bit_size - bits_read, static_cast<uint32_t>(SCRATCH_SIZE_BITS));
     auto bytes_to_read = bits_to_read >> 3;
     scratch = 0;
     
     for (auto i = 0; i < bytes_to_read; ++i) {
-        scratch |= static_cast<ScratchType>(static_cast<uint8_t>(buffer[bytes_read + i])) << (8 * i);
+        scratch |= static_cast<ScratchType>(static_cast<uint8_t>(buffer[total_bytes_read + i])) << (8 * i);
     }
     
-    bytes_read += bytes_to_read;
-    bits_to_read -= bytes_to_read * 8;
-    scratch_bits = bytes_to_read * 8;
+    total_bytes_read += bytes_to_read;
+    auto trailing_bits = bits_to_read - bytes_to_read * 8;
     
-    if (bits_to_read) {
-        auto tail_mask = (1ULL << bits_to_read) - 1;
-        scratch |= (static_cast<uint8_t>(buffer[bytes_read]) & tail_mask) << scratch_bits;
-        scratch_bits += bits_to_read;
+    if (trailing_bits) {
+        auto tail_mask = ~0ULL >> (SCRATCH_SIZE_BITS - trailing_bits);
+        scratch |= (static_cast<uint8_t>(buffer[total_bytes_read]) & tail_mask) << (bytes_to_read * 8U);
     }
+    
+    bits_read += bits_to_read;
+    scratch_bits = 0;
     
     return true;
 }
