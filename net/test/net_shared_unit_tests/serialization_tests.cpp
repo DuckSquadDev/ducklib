@@ -75,15 +75,14 @@ TEST(serialization_tests, ByteAlignment) {
     writer.flush_scratch();
 
     auto reader = net::NetReadStream({ buffer.get(), buffer_size * 8U });
-    reader.bit_size = buffer_size * 8;
     uint8_t read_val = 0;
 
     ASSERT_TRUE(reader.serialize_value(read_val, 3));
     ASSERT_EQ(read_val, val);
-    ASSERT_EQ(reader.scratch_bits, 3);
+    ASSERT_EQ(reader.scratch_bits_consumed, 3);
 
     reader.align_to_byte();
-    ASSERT_EQ(reader.scratch_bits, 8);
+    ASSERT_EQ(reader.scratch_bits_consumed, 8);
 }
 
 TEST(serialization_tests, BufferCapacity) {

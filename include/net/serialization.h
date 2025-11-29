@@ -44,7 +44,7 @@ struct NetWriteStream {
 
     template <std::integral T>
     bool serialize_value(T value, uint8_t bits);
-    bool serialize_data(std::byte* data, uint32_t data_size_bits);
+    bool serialize_data(std::byte* data, uint32_t data_bit_size);
     void align_to_byte();
     uint16_t bits_left() const;
     /**

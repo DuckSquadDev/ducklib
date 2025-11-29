@@ -6,25 +6,25 @@
 #include <cmath>
 
 namespace ducklib::net {
-bool NetWriteStream::serialize_data(std::byte* data, uint32_t data_size_bits) {
-    assert(data_size_bits > 0);
+bool NetWriteStream::serialize_data(std::byte* data, uint32_t data_bit_size) {
+    assert(data_bit_size > 0);
 
-    if (data_size_bits > bits_left()) {
+    if (data_bit_size > bits_left()) {
         return false;
     }
     
     auto remaining_scratch_bits = SCRATCH_SIZE_BITS - scratch_bits;
 
     // First part
-    if (data_size_bits <= remaining_scratch_bits) {
+    if (data_bit_size <= remaining_scratch_bits) {
         // Put all bits in a new scratch value so it can be shifted and put into the real scratch value
-        auto full_byte_count = data_size_bits / 8;
+        auto full_byte_count = data_bit_size >> 3;
         ScratchType temp_scratch = 0;
         memcpy(&temp_scratch, data, full_byte_count);
-        auto tail_byte_mask = ~0ULL >> (SCRATCH_SIZE_BITS - (data_size_bits - full_byte_count * 8));
-        temp_scratch |= (static_cast<uint8_t>(data[full_byte_count]) & tail_byte_mask) << (tail_byte_mask * 8);
+        auto tail_byte_mask = ~0ULL >> (SCRATCH_SIZE_BITS - (data_bit_size - full_byte_count * 8));
+        temp_scratch |= (static_cast<uint8_t>(data[full_byte_count]) & tail_byte_mask) << (full_byte_count * 8);
         scratch |= temp_scratch << scratch_bits;
-        scratch_bits += data_size_bits;
+        scratch_bits += data_bit_size;
         return true;
     }
     
@@ -33,12 +33,12 @@ bool NetWriteStream::serialize_data(std::byte* data, uint32_t data_size_bits) {
     scratch |= (static_cast<uint8_t>(*data) & head_mask) << scratch_bits;
     scratch_bits += head_tail_bits;
     flush_scratch();
-    auto bits_to_write = data_size_bits - head_tail_bits;
+    auto bits_to_write = data_bit_size - head_tail_bits;
 
     // Middle part
     auto whole_data_bytes_left = bits_to_write >> 3;
     auto data_bytes_written = 0;
-    auto bytes_written = 0;
+    auto bytes_written = bits_written >> 3;
     auto data_bit_offset = head_tail_bits;
     if (data_bit_offset == 0) {
         memcpy(&buffer[bytes_written], &data[data_bytes_written], whole_data_bytes_left);
@@ -60,13 +60,13 @@ bool NetWriteStream::serialize_data(std::byte* data, uint32_t data_size_bits) {
         scratch_bits = bits_to_write;
     }
 
-    bits_written += data_size_bits;
+    bits_written += data_bit_size;
     return true;
 }
 
 void NetWriteStream::align_to_byte() {
     auto bit_offset_from_byte = scratch_bits & 0x7;
-    scratch_bits += 8 - bit_offset_from_byte;
+    scratch_bits += (8 - bit_offset_from_byte) & 0x7;
 }
 
 uint16_t NetWriteStream::bits_left() const {
@@ -74,8 +74,8 @@ uint16_t NetWriteStream::bits_left() const {
 }
 
 bool NetWriteStream::flush_scratch() {
-    auto bytes_written = std::ceil(bits_written / 8.0);
-    auto scratch_bytes = std::ceil(scratch_bits / 8.0);
+    auto bytes_written = (bits_written + 7) >> 3;
+    auto scratch_bytes = (scratch_bits + 7) >> 3;
 
     [[unlikely]]
     if (buffer.size_bytes() < bytes_written + scratch_bytes) {
@@ -101,21 +101,60 @@ bool NetWriteStream::flush_scratch() {
 }
 
 bool NetReadStream::serialize_data(std::byte* data, uint16_t data_bit_size) {
-    auto byte_size = std::ceil(data_bit_size / 8.0f);
-
-    // Just memcpy if byte-aligned write location
-    if ((scratch_bits_consumed & 0x7) == 0) {
-        auto first_value_size = scratch_bits - scratch_bits_consumed;
-        // serialize_value(
+    assert(data_bit_size > 0);
+    
+    if (data_bit_size > bits_left()) {
+        return false;
     }
+    
+    // First part (to consume scratch)
+    auto scratch_bytes_to_write = data_bit_size >> 3;
+    
+    [[unlikely]]
+    if (data_bit_size <= (scratch_bits - scratch_bits_consumed)) { // Special case fast path
+        for (auto i = 0; i < scratch_bytes_to_write; ++i) {
+            data[i] = static_cast<std::byte>((scratch >> (scratch_bits_consumed + i * 8)) & 0xff);
+        }
+
+        auto head_bits_written = scratch_bytes_to_write * 8;
+        scratch_bits_consumed += head_bits_written;
+        auto trailing_bits = data_bit_size - head_bits_written;
+        auto trailing_mask = ~0ULL >> (SCRATCH_SIZE_BITS - trailing_bits);
+        data[scratch_bytes_to_write] = static_cast<std::byte>((scratch >> scratch_bits_consumed) & trailing_mask);
+        scratch_bits_consumed += trailing_bits;
+        return true;
+    }
+
+    // Isn't this the same as a standard first pass???????
+    for (auto i = 0; i < scratch_bytes_to_write; ++i) {
+        data[i] = static_cast<std::byte>((scratch >> (scratch_bits_consumed + i * 8)) & 0xff);
+    }
+    
+    auto head_bits_written = scratch_bytes_to_write * 8;
+    scratch_bits_consumed += head_bits_written;
+    auto trailing_bits = data_bit_size - head_bits_written;
+    auto trailing_mask = ~0ULL >> (SCRATCH_SIZE_BITS - trailing_bits);
+    data[scratch_bytes_to_write] = static_cast<std::byte>((scratch >> scratch_bits_consumed) & trailing_mask);
+    scratch_bits_consumed += trailing_bits;
+    
+    assert(scratch_bits_consumed == SCRATCH_SIZE_BITS);
+    
+    
+    // Middle part (just loop bytes)
+    auto bit_offset = (8 - trailing_bits) & 0x7;
+    auto middle_byte_start = scratch_bits_consumed
+    
+    if (bit_offset == 0) {
+        memcpy(data[scrat
+    }
+    
+    // Last part (read leftovers)
 
     return true;
 }
 void NetReadStream::align_to_byte() {
     auto bit_offset_from_byte = scratch_bits_consumed & 0x7;
-    if (bit_offset_from_byte != 0) {
-        scratch_bits_consumed += 8 - bit_offset_from_byte;
-    }
+    scratch_bits_consumed += (8 - bit_offset_from_byte) & 0x7;
 }
 
 uint16_t NetReadStream::bits_left() const {
