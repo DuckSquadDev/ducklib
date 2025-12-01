@@ -74,6 +74,7 @@ bool NetWriteStream::serialize_value(T value, uint8_t bits) {
     auto mask = ~0ULL >> (SCRATCH_SIZE_BITS - bits);
     scratch |= (value & mask) << scratch_bits;
     auto spill_bits = static_cast<uint8_t>(bits < remaining_scratch_bits ? 0 : bits - remaining_scratch_bits);
+    scratch_bits += bits - spill_bits;
 
     if (spill_bits > 0) {
         DL_NET_CHECK(flush_scratch());
@@ -82,7 +83,7 @@ bool NetWriteStream::serialize_value(T value, uint8_t bits) {
         return true;
     }
 
-    scratch_bits += bits;
+    scratch_bits += spill_bits;
     return true;
 }
 

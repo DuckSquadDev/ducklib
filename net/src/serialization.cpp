@@ -100,6 +100,7 @@ bool NetWriteStream::flush_scratch() {
     return true;
 }
 
+/// head, body, and tail terms are used for the first, middle, and last part of the functionality
 bool NetReadStream::serialize_data(std::byte* data, uint16_t data_bit_size) {
     assert(data_bit_size > 0);
     
@@ -107,45 +108,46 @@ bool NetReadStream::serialize_data(std::byte* data, uint16_t data_bit_size) {
         return false;
     }
     
-    // First part (to consume scratch)
-    auto scratch_bytes_to_write = data_bit_size >> 3;
-    
-    [[unlikely]]
-    if (data_bit_size <= (scratch_bits - scratch_bits_consumed)) { // Special case fast path
-        for (auto i = 0; i < scratch_bytes_to_write; ++i) {
-            data[i] = static_cast<std::byte>((scratch >> (scratch_bits_consumed + i * 8)) & 0xff);
-        }
+    // First part (to consume scratch and reach a byte boundary in the read buffer (data))
+    auto head_scratch_bits = std::min(data_bit_size, static_cast<uint16_t>(scratch_bits - scratch_bits_consumed));
+    auto head_scratch_byte_count = head_scratch_bits >> 3;
 
-        auto head_bits_written = scratch_bytes_to_write * 8;
-        scratch_bits_consumed += head_bits_written;
-        auto trailing_bits = data_bit_size - head_bits_written;
-        auto trailing_mask = ~0ULL >> (SCRATCH_SIZE_BITS - trailing_bits);
-        data[scratch_bytes_to_write] = static_cast<std::byte>((scratch >> scratch_bits_consumed) & trailing_mask);
-        scratch_bits_consumed += trailing_bits;
-        return true;
-    }
-
-    // Isn't this the same as a standard first pass???????
-    for (auto i = 0; i < scratch_bytes_to_write; ++i) {
+    for (auto i = 0; i < head_scratch_byte_count; ++i) {
         data[i] = static_cast<std::byte>((scratch >> (scratch_bits_consumed + i * 8)) & 0xff);
     }
     
-    auto head_bits_written = scratch_bytes_to_write * 8;
-    scratch_bits_consumed += head_bits_written;
-    auto trailing_bits = data_bit_size - head_bits_written;
-    auto trailing_mask = ~0ULL >> (SCRATCH_SIZE_BITS - trailing_bits);
-    data[scratch_bytes_to_write] = static_cast<std::byte>((scratch >> scratch_bits_consumed) & trailing_mask);
-    scratch_bits_consumed += trailing_bits;
+    auto head_byte_bits_copied = head_scratch_byte_count * 8;
+    scratch_bits_consumed += head_byte_bits_copied;
+    auto trailing_scratch_bits = head_scratch_bits - head_byte_bits_copied;
+    auto trailing_scratch_mask = ~0ULL >> (SCRATCH_SIZE_BITS - trailing_scratch_bits);
+    data[head_scratch_byte_count] = static_cast<std::byte>((scratch >> scratch_bits_consumed) & trailing_scratch_mask);
+    scratch_bits_consumed += trailing_scratch_bits;
     
-    assert(scratch_bits_consumed == SCRATCH_SIZE_BITS);
+    // TODO: Write potential trailing bits after scratch to reach byte-aligned bit in read buffer
+    // I need to find the number of bits to write, within the data_bit_size, to reach the byte boundary in read buffer (data)
+    auto head_bits_written = head_byte_bits_copied + trailing_scratch_bits;
+    auto buffer_offset_bits = std::min((8 - (head_bits_written & 0x7)) & 0x7, data_bit_size - head_bits_written);
+    auto align_mask = static_cast<std::byte>(~0 >> (8 - buffer_offset_bits));
+    data[head_scratch_byte_count] |= buffer[bits_read >> 3] & align_mask;
+    bits_read += buffer_offset_bits;
     
+    auto bits_copied = head_byte_bits_copied + trailing_scratch_bits;
     
     // Middle part (just loop bytes)
-    auto bit_offset = (8 - trailing_bits) & 0x7;
-    auto middle_byte_start = scratch_bits_consumed
+    auto middle_byte_count = data_bit_size - bits_copied;
+    auto start_dest_byte = head_scratch_byte_count;
+    auto start_src_byte = bits_read >> 3;
     
-    if (bit_offset == 0) {
-        memcpy(data[scrat
+    if (buffer_offset_bits == 0) {
+        memcpy(&data[start_dest_byte], &buffer[start_src_byte], middle_byte_count);
+    } else {
+        start_dest_byte += 1;
+        
+        for (auto i = 0; i < middle_byte_count; ++i) {
+            data[start_dest_byte + i] = buffer[start_src_byte + i];
+        }
+        
+        bits_read += middle_byte_count * 8;
     }
     
     // Last part (read leftovers)

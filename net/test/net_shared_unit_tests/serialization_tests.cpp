@@ -131,3 +131,34 @@ TEST(serialization_tests, MultipleScratchFlushes) {
     ASSERT_EQ(read2, val2);
     ASSERT_EQ(read3, val3);
 }
+
+TEST(serialization_tests, DEVTEST) {
+    constexpr auto buffer_size = 128;
+    auto source_buffer = std::make_unique<std::byte[]>(buffer_size);
+    auto value_writer = net::NetWriteStream({ source_buffer.get(), static_cast<size_t>(buffer_size) });
+    
+    auto a = 12345U; auto b = 67890U; auto c = 11U; auto d = 250000000U; auto e = 111111U; auto f = 0U;
+    value_writer.serialize_value(a, 16);
+    value_writer.serialize_value(b, 32);
+    value_writer.serialize_value(c, 5);
+    value_writer.serialize_value(d, 32);
+    value_writer.serialize_value(e, 23);
+    value_writer.serialize_value(f, 29);
+    
+    auto value_reader = net::NetReadStream(value_writer.buffer.data(), 137);
+    uint16_t ra; uint32_t rb; uint8_t rc; uint32_t rd; uint32_t re; uint32_t rf;
+    
+    value_reader.serialize_value(ra, 16);
+    value_reader.serialize_value(rb, 32);
+    value_reader.serialize_value(rc, 5);
+    value_reader.serialize_value(rd, 32);
+    value_reader.serialize_value(re, 23);
+    value_reader.serialize_value(rf, 29);
+    
+    ASSERT_EQ(a, ra);
+    ASSERT_EQ(b, rb);
+    ASSERT_EQ(c, rc);
+    ASSERT_EQ(d, rd);
+    ASSERT_EQ(e, re);
+    ASSERT_EQ(f, rf);
+}
