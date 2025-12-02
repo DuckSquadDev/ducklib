@@ -50,7 +50,7 @@ struct NetWriteStream {
     /**
      * @details When flushing, the next flush will happen to the following byte boundary.
      */
-    bool flush_scratch();
+    bool flush_scratch(); // Requires scratch_bits to be up to date
 
     static constexpr bool can_write() { return true; }
     static constexpr bool can_read() { return false; }
@@ -83,7 +83,6 @@ bool NetWriteStream::serialize_value(T value, uint8_t bits) {
         return true;
     }
 
-    scratch_bits += spill_bits;
     return true;
 }
 
@@ -92,7 +91,7 @@ struct NetReadStream {
     uint32_t bit_size = 0;
     uint32_t bits_read = 0;
     ScratchType scratch = 0;
-    uint8_t scratch_bits = 0;          // Total bits loaded in scratch
+    uint8_t scratch_bits = 0;          // Total bits loaded into scratch
     uint8_t scratch_bits_consumed = 0; // Bits consumed from scratch
 
     NetReadStream(const std::byte* data, uint32_t bit_size)
@@ -106,7 +105,7 @@ struct NetReadStream {
     bool serialize_data(std::byte* data, uint16_t data_bit_size);
     void align_to_byte();
     uint16_t bits_left() const;
-    bool read_scratch();
+    bool read_scratch(); // Requires bits_read to be up to date but not scratch_bits_consumed
 
     static constexpr bool can_write() { return false; }
     static constexpr bool can_read() { return true; }
@@ -123,14 +122,14 @@ bool NetReadStream::serialize_value(T& value, uint8_t bits) {
     auto mask = ~0ULL >> (SCRATCH_SIZE_BITS - bits);
     auto read_value = static_cast<T>((scratch >> scratch_bits_consumed) & mask);
     auto spill_bits = static_cast<uint8_t>(bits <= scratch_bits_remaining ? 0 : bits - scratch_bits_remaining);
+    auto read_bits_so_far = bits - spill_bits;
+    scratch_bits_consumed += read_bits_so_far;
 
     if (spill_bits > 0) {
         DL_NET_CHECK(read_scratch());
         auto spill_mask = ~0ULL >> (SCRATCH_SIZE_BITS - spill_bits);
         read_value |= (scratch & spill_mask) << scratch_bits_remaining;
         scratch_bits_consumed = spill_bits;
-    } else {
-        scratch_bits_consumed += bits;
     }
 
     value = read_value;

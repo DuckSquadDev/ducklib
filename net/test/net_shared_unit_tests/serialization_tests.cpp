@@ -138,22 +138,31 @@ TEST(serialization_tests, DEVTEST) {
     auto value_writer = net::NetWriteStream({ source_buffer.get(), static_cast<size_t>(buffer_size) });
     
     auto a = 12345U; auto b = 67890U; auto c = 11U; auto d = 250000000U; auto e = 111111U; auto f = 0U;
-    value_writer.serialize_value(a, 16);
-    value_writer.serialize_value(b, 32);
-    value_writer.serialize_value(c, 5);
-    value_writer.serialize_value(d, 32);
-    value_writer.serialize_value(e, 23);
-    value_writer.serialize_value(f, 29);
+    auto g = 22222U; auto h = 65355ULL; auto i = 3U;
+    ASSERT_TRUE(value_writer.serialize_value(a, 16));
+    ASSERT_TRUE(value_writer.serialize_value(b, 32));
+    ASSERT_TRUE(value_writer.serialize_value(c, 5));
+    ASSERT_TRUE(value_writer.serialize_value(d, 32));
+    ASSERT_TRUE(value_writer.serialize_value(e, 23));
+    ASSERT_TRUE(value_writer.serialize_value(f, 29));
+    ASSERT_TRUE(value_writer.serialize_value(g, 15));
+    ASSERT_TRUE(value_writer.serialize_value(h, 64));
+    ASSERT_TRUE(value_writer.serialize_value(i, 27));
+    ASSERT_TRUE(value_writer.flush_scratch());
     
-    auto value_reader = net::NetReadStream(value_writer.buffer.data(), 137);
+    auto value_reader = net::NetReadStream(value_writer.buffer.data(), 243);
     uint16_t ra; uint32_t rb; uint8_t rc; uint32_t rd; uint32_t re; uint32_t rf;
+    uint16_t rg; uint64_t rh; uint32_t ri;
     
-    value_reader.serialize_value(ra, 16);
-    value_reader.serialize_value(rb, 32);
-    value_reader.serialize_value(rc, 5);
-    value_reader.serialize_value(rd, 32);
-    value_reader.serialize_value(re, 23);
-    value_reader.serialize_value(rf, 29);
+    ASSERT_TRUE(value_reader.serialize_value(ra, 16));
+    ASSERT_TRUE(value_reader.serialize_value(rb, 32));
+    ASSERT_TRUE(value_reader.serialize_value(rc, 5));
+    ASSERT_TRUE(value_reader.serialize_value(rd, 32));
+    ASSERT_TRUE(value_reader.serialize_value(re, 23));
+    ASSERT_TRUE(value_reader.serialize_value(rf, 29));
+    ASSERT_TRUE(value_reader.serialize_value(rg, 15));
+    ASSERT_TRUE(value_reader.serialize_value(rh, 64));
+    ASSERT_TRUE(value_reader.serialize_value(ri, 27));
     
     ASSERT_EQ(a, ra);
     ASSERT_EQ(b, rb);
@@ -161,4 +170,7 @@ TEST(serialization_tests, DEVTEST) {
     ASSERT_EQ(d, rd);
     ASSERT_EQ(e, re);
     ASSERT_EQ(f, rf);
+    ASSERT_EQ(g, rg);
+    ASSERT_EQ(h, rh);
+    ASSERT_EQ(i, ri);
 }
