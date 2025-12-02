@@ -46,7 +46,7 @@ bool NetWriteStream::serialize_data(std::byte* data, uint32_t data_bit_size) {
         auto rev_data_offset = 8 - data_bit_offset;
 
         for (auto i = data_bytes_written; i < data_bytes_written + whole_data_bytes_left; ++i) {
-            buffer[bytes_written++] = (data[i] << data_bit_offset) | (data[i+1] >> rev_data_offset);
+            buffer[bytes_written++] = (data[i] >> data_bit_offset) | (data[i+1] << rev_data_offset);
         }
     }
 
@@ -123,34 +123,31 @@ bool NetReadStream::serialize_data(std::byte* data, uint16_t data_bit_size) {
     data[head_scratch_byte_count] = static_cast<std::byte>((scratch >> scratch_bits_consumed) & trailing_scratch_mask);
     scratch_bits_consumed += trailing_scratch_bits;
     
-    // TODO: Write potential trailing bits after scratch to reach byte-aligned bit in read buffer
-    // I need to find the number of bits to write, within the data_bit_size, to reach the byte boundary in read buffer (data)
     auto head_bits_written = head_byte_bits_copied + trailing_scratch_bits;
     auto buffer_offset_bits = std::min((8 - (head_bits_written & 0x7)) & 0x7, data_bit_size - head_bits_written); // TODO: Reconsider min???
-    auto align_mask = static_cast<std::byte>(~0 >> (8 - buffer_offset_bits));
-    data[head_scratch_byte_count] |= buffer[bits_read >> 3] & align_mask;
+    auto align_mask = static_cast<std::byte>(~0U) >> (8 - buffer_offset_bits);
+    data[head_scratch_byte_count] |= (buffer[bits_read >> 3] & align_mask) << (8 - buffer_offset_bits);
     bits_read += buffer_offset_bits;
     
-    auto bits_copied = head_byte_bits_copied + trailing_scratch_bits;
+    auto bits_copied = head_byte_bits_copied + trailing_scratch_bits + buffer_offset_bits;
     
     // Middle part (just loop bytes)
     auto middle_bits = data_bit_size - bits_copied;
     auto middle_bytes = middle_bits >> 3;
-    auto start_dest_byte = head_scratch_byte_count;
+    auto start_dest_byte = bits_copied >> 3;
     auto start_src_byte = bits_read >> 3;
     
     if (buffer_offset_bits == 0) {
         memcpy(&data[start_dest_byte], &buffer[start_src_byte], middle_bytes);
     } else {
-        start_dest_byte += 1;
-        auto low_offset = 8 - buffer_offset_bits;
-        auto high_offset = buffer_offset_bits;
-        auto low_mask = static_cast<std::byte>(~0U >> (8 - high_offset));
-        auto high_mask = static_cast<std::byte>(~0U >> (8 - low_offset));
+        auto low_offset = buffer_offset_bits;
+        auto high_offset = 8 - buffer_offset_bits;
+        auto low_mask = static_cast<std::byte>(~0U) >> (8 - high_offset);
+        auto high_mask = static_cast<std::byte>(~0U) >> (8 - low_offset);
 
         for (auto i = 0; i < middle_bytes; ++i) {
-            data[start_dest_byte + i] = ((buffer[start_src_byte + i - 1] >> low_offset) & low_mask)
-                | ((buffer[start_src_byte + i] & high_mask) << high_offset);
+            data[start_dest_byte + i] = ((buffer[start_src_byte + i] >> low_offset) & low_mask)
+                | ((buffer[start_src_byte + i + 1] & high_mask) << high_offset);
         }
     }
     

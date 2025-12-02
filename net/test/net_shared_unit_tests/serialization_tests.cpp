@@ -134,7 +134,7 @@ TEST(serialization_tests, MultipleScratchFlushes) {
 
 TEST(serialization_tests, DEVTEST) {
     constexpr auto buffer_size = 128;
-    constexpr auto bit_size = 243;
+    constexpr auto main_bit_size = 243;
     auto source_buffer = std::make_unique<std::byte[]>(buffer_size);
     auto value_writer = net::NetWriteStream({ source_buffer.get(), static_cast<size_t>(buffer_size) });
 
@@ -155,16 +155,20 @@ TEST(serialization_tests, DEVTEST) {
     // Block copy part
     auto block_source_buffer = std::make_unique<std::byte[]>(buffer_size);
     auto block_writer = net::NetWriteStream({ block_source_buffer.get(), buffer_size });
-    
-    ASSERT_TRUE(block_writer.serialize_data(value_writer.buffer.data(), bit_size));
+
+    auto x = 4U;    
+    ASSERT_TRUE(block_writer.serialize_value(x, 3));
+    ASSERT_TRUE(block_writer.serialize_data(value_writer.buffer.data(), main_bit_size));
     
     auto block_dest_buffer = std::make_unique<std::byte[]>(buffer_size);
-    auto block_reader = net::NetReadStream({ block_writer.buffer.data(), bit_size });
-    
-    ASSERT_TRUE(block_reader.serialize_data(block_dest_buffer.get(), bit_size));
+    auto block_reader = net::NetReadStream({ block_writer.buffer.data(), main_bit_size + 3 });
+
+    uint32_t rx;
+    ASSERT_TRUE(block_reader.serialize_value(rx, 3));
+    ASSERT_TRUE(block_reader.serialize_data(block_dest_buffer.get(), main_bit_size));
     
     // Read back all values
-    auto value_reader = net::NetReadStream(block_dest_buffer.get(), bit_size);
+    auto value_reader = net::NetReadStream(block_dest_buffer.get(), main_bit_size);
     uint16_t ra; uint32_t rb; uint8_t rc; uint32_t rd; uint32_t re; uint32_t rf;
     uint16_t rg; uint64_t rh; uint32_t ri;
     
