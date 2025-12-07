@@ -67,8 +67,9 @@ auto Socket::send(Address to, std::span<const std::byte> data) const -> size_t {
         reinterpret_cast<sockaddr*>(&socketAddress),
         sizeof(socketAddress));
 
-    if (sent_bytes == SOCKET_ERROR)
+    if (sent_bytes == SOCKET_ERROR) {
         net_log_error("Failed to send data over socket");
+    }
 
     return sent_bytes;
 }

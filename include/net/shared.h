@@ -6,6 +6,8 @@
 #include <winsock.h>
 
 namespace ducklib::net {
+constexpr uint16_t MTU = 1200;
+
 class Address {
 public:
     Address() = default;
