@@ -5,6 +5,7 @@
 #include <span>
 #include <algorithm>
 #include <cmath>
+#include <bit>
 
 namespace ducklib::net {
 #define DL_NET_CHECK(expr) \

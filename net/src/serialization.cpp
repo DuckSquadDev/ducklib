@@ -1,9 +1,6 @@
 #include <cassert>
-#include <bit>
 
 #include "net/serialization.h"
-
-#include <cmath>
 
 namespace ducklib::net {
 bool NetWriteStream::serialize_data(std::byte* data, uint32_t data_bit_size) {
@@ -162,6 +159,7 @@ bool NetReadStream::serialize_data(std::byte* data, uint16_t data_bit_size) {
 
     return true;
 }
+
 void NetReadStream::align_to_byte() {
     auto bit_offset_from_byte = scratch_bits_consumed & 0x7;
     scratch_bits_consumed += (8 - bit_offset_from_byte) & 0x7;
