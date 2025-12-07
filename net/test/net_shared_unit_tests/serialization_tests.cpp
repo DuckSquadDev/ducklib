@@ -132,7 +132,7 @@ TEST(serialization_tests, MultipleScratchFlushes) {
     ASSERT_EQ(read3, val3);
 }
 
-TEST(serialization_tests, DEVTEST) {
+TEST(serialization_tests, SerializeDataWithOffset) {
     constexpr auto buffer_size = 128;
     constexpr auto main_bit_size = 243;
     auto source_buffer = std::make_unique<std::byte[]>(buffer_size);
@@ -191,4 +191,26 @@ TEST(serialization_tests, DEVTEST) {
     ASSERT_EQ(g, rg);
     ASSERT_EQ(h, rh);
     ASSERT_EQ(i, ri);
+}
+
+TEST(serialization_tests, SerializeDataFullScratch) {
+    constexpr auto buffer_size = 128;
+    auto source_buffer = std::make_unique<std::byte[]>(buffer_size);
+    auto writer = net::NetWriteStream({ source_buffer.get(), static_cast<size_t>(buffer_size) });
+    uint64_t data[] = { 0x1234567890abcdefULL, 0xcafebabedeadbeefULL };
+    uint64_t a = 0;
+    uint16_t data_size = sizeof(data) * 8;
+    
+    ASSERT_TRUE(writer.serialize_value(a, 64));
+    ASSERT_TRUE(writer.serialize_data(reinterpret_cast<std::byte*>(data), data_size));
+
+    auto block_buffer = std::make_unique<std::byte[]>(buffer_size);
+    auto reader = net::NetReadStream({ source_buffer.get(), static_cast<uint16_t>(data_size + 64) });
+    
+    uint64_t ra;
+    ASSERT_TRUE(reader.serialize_value(ra, 64));
+    ASSERT_TRUE(reader.serialize_data(block_buffer.get(), data_size));
+    ASSERT_EQ(a, ra);
+    ASSERT_EQ(reinterpret_cast<uint64_t*>(block_buffer.get())[0], data[0]);
+    ASSERT_EQ(reinterpret_cast<uint64_t*>(block_buffer.get())[1], data[1]);
 }

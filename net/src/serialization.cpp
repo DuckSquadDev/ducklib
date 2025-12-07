@@ -18,7 +18,8 @@ bool NetWriteStream::serialize_data(std::byte* data, uint32_t data_bit_size) {
         auto full_byte_count = data_bit_size >> 3;
         ScratchType temp_scratch = 0;
         memcpy(&temp_scratch, data, full_byte_count);
-        auto tail_byte_mask = ~0ULL >> (SCRATCH_SIZE_BITS - (data_bit_size - full_byte_count * 8));
+        auto tail_byte_bits = (data_bit_size - full_byte_count * 8);
+        auto tail_byte_mask = tail_byte_bits > 0 ? ~0ULL >> (SCRATCH_SIZE_BITS - tail_byte_bits) : 0;
         temp_scratch |= (static_cast<uint8_t>(data[full_byte_count]) & tail_byte_mask) << (full_byte_count * 8);
         scratch |= temp_scratch << scratch_bits;
         scratch_bits += data_bit_size;
@@ -26,7 +27,7 @@ bool NetWriteStream::serialize_data(std::byte* data, uint32_t data_bit_size) {
     }
     
     auto head_tail_bits = -scratch_bits & 0x7;
-    auto head_mask = ~0ULL >> (SCRATCH_SIZE_BITS - head_tail_bits);
+    auto head_mask = head_tail_bits > 0 ? ~0ULL >> (SCRATCH_SIZE_BITS - head_tail_bits) : 0;
     scratch |= (static_cast<uint8_t>(*data) & head_mask) << scratch_bits;
     scratch_bits += head_tail_bits;
     flush_scratch();
@@ -116,7 +117,7 @@ bool NetReadStream::serialize_data(std::byte* data, uint16_t data_bit_size) {
     auto head_byte_bits_copied = head_scratch_byte_count * 8;
     scratch_bits_consumed += head_byte_bits_copied;
     auto trailing_scratch_bits = head_scratch_bits - head_byte_bits_copied;
-    auto trailing_scratch_mask = ~0ULL >> (SCRATCH_SIZE_BITS - trailing_scratch_bits);
+    auto trailing_scratch_mask = trailing_scratch_bits > 0 ? ~0ULL >> (SCRATCH_SIZE_BITS - trailing_scratch_bits) : 0;
     data[head_scratch_byte_count] = static_cast<std::byte>((scratch >> scratch_bits_consumed) & trailing_scratch_mask);
     scratch_bits_consumed += trailing_scratch_bits;
     

@@ -61,6 +61,8 @@ struct NetWriteStream {
 
 template <std::integral T>
 bool NetWriteStream::serialize_value(T value, uint8_t bits) {
+    assert(bits > 0);
+    
     [[unlikely]]
     if (bits > bits_left()) {
         return false;
@@ -114,6 +116,8 @@ struct NetReadStream {
 
 template <std::integral T>
 bool NetReadStream::serialize_value(T& value, uint8_t bits) {
+    assert(bits > 0);
+    
     [[unlikely]]
     if (scratch_bits_consumed >= scratch_bits) {
         DL_NET_CHECK(read_scratch());
@@ -123,7 +127,7 @@ bool NetReadStream::serialize_value(T& value, uint8_t bits) {
     auto mask = ~0ULL >> (SCRATCH_SIZE_BITS - bits);
     auto read_value = static_cast<T>((scratch >> scratch_bits_consumed) & mask);
     auto spill_bits = static_cast<uint8_t>(bits <= scratch_bits_remaining ? 0 : bits - scratch_bits_remaining);
-    auto read_bits_so_far = bits - spill_bits;
+    uint8_t read_bits_so_far = bits - spill_bits;
     scratch_bits_consumed += read_bits_so_far;
 
     if (spill_bits > 0) {
