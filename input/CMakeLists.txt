@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(${PROJECT_NAME} STATIC
-        ../include/input/input.h
+        ../include/ducklib/input/input.h
         src/input.cpp)
 
 target_compile_options(${PROJECT_NAME} PRIVATE

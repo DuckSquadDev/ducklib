@@ -1,7 +1,7 @@
 #include <cmath>
 #include <cstring>
 
-#include "core/unicode.h"
+#include "ducklib/core/unicode.h"
 
 namespace ducklib {
 char32_t utf16_to_cp(const char16_t* str, uint32_t word_len) {

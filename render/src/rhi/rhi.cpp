@@ -1,7 +1,7 @@
 #include <d3d12.h>
 
-#include "render/rhi/rhi.h"
-#include "render/render_util.h"
+#include "ducklib/render/rhi/rhi.h"
+#include "ducklib/render/render_util.h"
 
 namespace ducklib::render {
 auto create_rhi(Rhi& out_rhi) -> void {

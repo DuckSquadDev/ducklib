@@ -1,12 +1,12 @@
 #include <wrl/client.h>
 #include <stdexcept>
 
-#include "core/win/win_app_window.h"
-#include "render/rhi/device.h"
+#include "ducklib/core/win/win_app_window.h"
+#include "ducklib/render/rhi/device.h"
 
-#include "render/render_util.h"
-#include "render/rhi/command_list.h"
-#include "render/rhi/shader.h"
+#include "ducklib/render/render_util.h"
+#include "ducklib/render/rhi/command_list.h"
+#include "ducklib/render/rhi/shader.h"
 
 namespace ducklib::render {
 void Device::create_queue(QueueType type, CommandQueue& out_queue) {

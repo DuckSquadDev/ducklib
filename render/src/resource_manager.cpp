@@ -1,6 +1,5 @@
-#include "render/resource_manager.h"
-
-#include "render/render_util.h"
+#include "ducklib/render/resource_manager.h"
+#include "ducklib/render/render_util.h"
 
 namespace ducklib::render {
 void upload_buffer_data(const Buffer& dest_resource, uint64_t offset, const void* data, uint64_t size) {

@@ -4,7 +4,7 @@
 #include <cassert>
 #include <format>
 
-#include "net/Shared.h"
+#include "ducklib/net/Shared.h"
 
 #include <stdexcept>
 

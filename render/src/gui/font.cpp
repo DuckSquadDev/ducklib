@@ -1,12 +1,15 @@
+#include <algorithm>
 #include <array>
 #include <fstream>
-#include <assert.h>
+#include <cassert>
 
 #define STB_TRUETYPE_IMPLEMENTATION
 
-#include "../lib/stb_truetype.h"
-#include "render/gui/font.h"
-#include "render/gui/gui.h"
+#include "third_party/stb_truetype.h"
+#include "ducklib/render/gui/font.h"
+#include "ducklib/render/gui/gui.h"
+
+#undef max
 
 namespace ducklib::render {
 constexpr char32_t FONT_MISSING_CODEPOINT = 0xfffc;
@@ -30,7 +33,7 @@ void copy_glyph_into_atlas(
     auto write_caret = dest_y * atlas_width + dest_x;
     auto read_caret = 0;
 
-    for (auto i = 0; i < glyph_height; ++i) {
+    for (auto i = 0U; i < glyph_height; ++i) {
         memcpy(&atlas_bitmap[write_caret], &glyph_bitmap[read_caret], glyph_width);
         write_caret += atlas_width;
         read_caret += glyph_stride;
@@ -56,10 +59,7 @@ GlyphInfo append_glyph_info(
     assert(x1 - x0 >= 0);
     uint32_t height = y1 - y0;
     uint32_t width = x1 - x0;
-
-    if (height > max_glyph_height) {
-        max_glyph_height = height;
-    }
+    max_glyph_height = std::max(max_glyph_height, height);
 
     if (x_caret + width + 2 * GLYPH_PADDING > atlas_width) {
         rows_required++;
@@ -85,9 +85,9 @@ uint32_t get_glyph_width(const stbtt_fontinfo& font_info, float scale, char32_t 
     int advance_width;
     int left_offset;
 
-    stbtt_GetCodepointHMetrics(&font_info, codepoint, &advance_width, &left_offset);
+    stbtt_GetCodepointHMetrics(&font_info, static_cast<int>(codepoint), &advance_width, &left_offset);
 
-    return std::round(advance_width * scale);
+    return static_cast<uint32_t>(std::round(static_cast<float>(advance_width) * scale));
 }
 
 void draw_glyph_and_advance(
@@ -133,22 +133,33 @@ void draw_glyph_and_advance(
         x_caret,
         y_caret);
 
-    glyph_info.u0 = static_cast<float>(x_caret) / atlas_width;
-    glyph_info.v0 = static_cast<float>(y_caret) / atlas_height;
-    glyph_info.u1 = (static_cast<float>(x_caret) + glyph_info.width) / atlas_width;
-    glyph_info.v1 = (static_cast<float>(y_caret) + glyph_info.height) / atlas_height;
+    glyph_info.u0 = x_caret / (float)atlas_width;
+    glyph_info.v0 = y_caret / (float)atlas_height;
+    glyph_info.u1 = (x_caret + (float)glyph_info.width) / atlas_width;
+    glyph_info.v1 = (y_caret + (float)glyph_info.height) / atlas_height;
     x_caret += glyph_info.width + GLYPH_PADDING;
 }
 
+#define CHECK_FILE(op, msg) \
+    do { \
+        if ((op) != 0) { \
+            throw std::runtime_error(msg); \
+        } \
+    } while(false)
+
 GlyphAtlasInfo generate_glyph_atlas(std::span<GlyphRange> codepoint_ranges, std::u8string_view font, uint8_t size) {
     // Read the font file
-    auto font_file = fopen(reinterpret_cast<const char*>(font.data()), "rb");
-    fseek(font_file, 0, SEEK_END);
+    FILE* font_file = nullptr;
+    auto result = fopen_s(&font_file, reinterpret_cast<const char*>(font.data()), "rb");
+    if (result == 0) {
+        throw std::runtime_error("Failed to open font file");
+    }
+    CHECK_FILE(fseek(font_file, 0, SEEK_END), "Failed to seek in font file");
     auto font_file_size = ftell(font_file);
-    rewind(font_file);
+    CHECK_FILE(fseek(font_file, 0, SEEK_SET), "Failed to seek in font file");
     auto font_buffer = new std::byte[font_file_size];
-    fread(font_buffer, 1, font_file_size, font_file);
-    fclose(font_file);
+    CHECK_FILE(fread(font_buffer, 1, font_file_size, font_file), "Failed to read font file");
+    CHECK_FILE(fclose(font_file), "Failed to close font file");
 
     // Load read font file into stbtt
     stbtt_fontinfo font_info = {};
@@ -241,7 +252,7 @@ uint32_t generate_text_quads(
 
     constexpr auto glyph_stride = 6 * sizeof(gui::GuiVertex);
     auto caret_x = x;
-    auto caret_y = y + atlas.ascent; // TODO: Fix y-offset (y is top-left of element, probably, which is bad here)
+    auto caret_y = y + atlas.ascent;
     auto g = 0; // glyphs written
 
     if (text.length() * glyph_stride > vertex_buffer_size) {
@@ -249,7 +260,7 @@ uint32_t generate_text_quads(
         throw std::runtime_error("Vertex buffer size for text is too small");
     }
 
-    for (auto i = 0; i < text.length(); ++i) {
+    for (auto i = 0U; i < text.length(); ++i) {
         auto ch = static_cast<uint32_t>(text[i]);
 
         if (text[i] == ' ') {
@@ -267,12 +278,12 @@ uint32_t generate_text_quads(
         auto y1 = static_cast<float>(caret_y + glyph_info.y_offset + glyph_info.height);
 
         float color[] = { 0.4f, 0.7f, 0.0f, 1.0f };
-        vertex_buffer[g * 6 + 0] = gui::GuiVertex { x0, y0, glyph_info.u0, glyph_info.v0, color[0], color[1], color[2], color[3] };
-        vertex_buffer[g * 6 + 1] = gui::GuiVertex { x1, y0, glyph_info.u1, glyph_info.v0, color[0], color[1], color[2], color[3] };
-        vertex_buffer[g * 6 + 2] = gui::GuiVertex { x0, y1, glyph_info.u0, glyph_info.v1, color[0], color[1], color[2], color[3] };
-        vertex_buffer[g * 6 + 3] = gui::GuiVertex { x0, y1, glyph_info.u0, glyph_info.v1, color[0], color[1], color[2], color[3] };
-        vertex_buffer[g * 6 + 4] = gui::GuiVertex { x1, y0, glyph_info.u1, glyph_info.v0, color[0], color[1], color[2], color[3] };
-        vertex_buffer[g * 6 + 5] = gui::GuiVertex { x1, y1, glyph_info.u1, glyph_info.v1, color[0], color[1], color[2], color[3] };
+        vertex_buffer[g * 6 + 0] = gui::GuiVertex { x0, y0, glyph_info.u0, glyph_info.v0, { color[0], color[1], color[2], color[3] } };
+        vertex_buffer[g * 6 + 1] = gui::GuiVertex { x1, y0, glyph_info.u1, glyph_info.v0, { color[0], color[1], color[2], color[3] } };
+        vertex_buffer[g * 6 + 2] = gui::GuiVertex { x0, y1, glyph_info.u0, glyph_info.v1, { color[0], color[1], color[2], color[3] } };
+        vertex_buffer[g * 6 + 3] = gui::GuiVertex { x0, y1, glyph_info.u0, glyph_info.v1, { color[0], color[1], color[2], color[3] } };
+        vertex_buffer[g * 6 + 4] = gui::GuiVertex { x1, y0, glyph_info.u1, glyph_info.v0, { color[0], color[1], color[2], color[3] } };
+        vertex_buffer[g * 6 + 5] = gui::GuiVertex { x1, y1, glyph_info.u1, glyph_info.v1, { color[0], color[1], color[2], color[3] } };
 
         caret_x += glyph_info.x_advance;
         ++g;

@@ -1,4 +1,4 @@
-#include "math/math.h"
+#include "ducklib/core/math.h"
 
 #include <cassert>
 

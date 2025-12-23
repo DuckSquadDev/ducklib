@@ -9,26 +9,26 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(${PROJECT_NAME} STATIC
-        ../include/render/rhi/swap_chain.h
+        ../include/ducklib/render/rhi/swap_chain.h
         src/rhi/rhi.cpp
-        ../include/render/rhi/rhi.h
-        ../include/render/rhi/device.h
+        ../include/ducklib/render/rhi/rhi.h
+        ../include/ducklib/render/rhi/device.h
         src/rhi/device.cpp
-        ../include/render/rhi/constants.h
-        ../include/render/rhi/resources/swap_chain.h
-        ../include/render/rhi/resources/descriptor_set.h
-        ../include/render/rhi/command_list.h
-        ../include/render/rhi/types.h
-        ../include/render/resource_manager.h
+        ../include/ducklib/render/rhi/constants.h
+        ../include/ducklib/render/rhi/resources/swap_chain.h
+        ../include/ducklib/render/rhi/resources/descriptor_set.h
+        ../include/ducklib/render/rhi/command_list.h
+        ../include/ducklib/render/rhi/types.h
+        ../include/ducklib/render/resource_manager.h
         src/resource_manager.cpp
-        ../include/render/rhi/shader.h
+        ../include/ducklib/render/rhi/shader.h
         src/rhi/shader.cpp
         src/rhi/types.cpp
-        ../include/render/render_util.h
-        ../include/render/gui/font.h
+        ../include/ducklib/render/render_util.h
+        ../include/ducklib/render/gui/font.h
         src/gui/font.cpp
         src/render_util.cpp
-        ../include/render/gui/gui.h
+        ../include/ducklib/render/gui/gui.h
         src/gui/gui.cpp)
 
 target_compile_options(${PROJECT_NAME} PRIVATE
@@ -42,6 +42,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
         OUTPUT_NAME ${PROJECT_NAME}
         SUFFIX ".lib")
 target_link_libraries(${PROJECT_NAME}
+        PUBLIC
         ducklib-core
         d3d12
         dxgi

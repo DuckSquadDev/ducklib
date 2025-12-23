@@ -1,201 +1,22 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="Core\D3D12\D3D12Device.h">
-      <Filter>Core\D3D12</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\D3D12\D3D12Adapter.h">
-      <Filter>Core\D3D12</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\IAdapter.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\ISwapChain.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\D3D12\D3D12SwapChain.h">
-      <Filter>Core\D3D12</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\D3D12\D3D12Formats.h">
-      <Filter>Core\D3D12</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Resources\ImageBuffer.h">
-      <Filter>Core\Resources</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\ICommandBuffer.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\D3D12\D3D12CommandBuffer.h">
-      <Filter>Core\D3D12</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Handle.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\IResourceCommandBuffer.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\D3D12\D3D12ResourceCommandBuffer.h">
-      <Filter>Core\D3D12</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\D3D12\D3D12ResourceAllocator.h">
-      <Filter>Core\D3D12</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Resources\ResourceStates.h">
-      <Filter>Core\Resources</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\D3D12\D3D12ResourceStates.h">
-      <Filter>Core\D3D12</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Resources\Constants.h">
-      <Filter>Core\Resources</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\IDevice.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\D3D12\D3D12Common.h">
-      <Filter>Core\D3D12</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Resources\Viewport.h">
-      <Filter>Core\Resources</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Resources\Rect.h">
-      <Filter>Core\Resources</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Resources\PrimitiveTopology.h">
-      <Filter>Core\Resources</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Resources\Buffer.h">
-      <Filter>Core\Resources</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\IRHI.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Vulkan\VulkanDevice.h">
-      <Filter>Core\Vulkan</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\D3D12\D3D12RHI.h">
-      <Filter>Core\D3D12</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Resources\InputDescription.h">
-      <Filter>Core\Resources</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Vulkan\VulkanAdapter.h">
-      <Filter>Core\Vulkan</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Vulkan\VulkanRHI.h">
-      <Filter>Core\Vulkan</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Vulkan\VulkanSwapChain.h">
-      <Filter>Core\Vulkan</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Vulkan\VulkanCommon.h">
-      <Filter>Core\Vulkan</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Vulkan\VulkanCommandBuffer.h">
-      <Filter>Core\Vulkan</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\PipelineState.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\IPass.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Vulkan\VulkanPass.h">
-      <Filter>Core\Vulkan</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\IFrameBuffer.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Vulkan\VulkanFrameBuffer.h">
-      <Filter>Core\Vulkan</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\IFence.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Vulkan\VulkanFence.h">
-      <Filter>Core\Vulkan</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\D3D12\D3D12Fence.h">
-      <Filter>Core\D3D12</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\PassDescription.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\ISemaphore.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\D3D12.h\D3D12Semaphore.h">
-      <Filter>Core\D3D12</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Vulkan\VulkanSemaphore.h">
-      <Filter>Core\Vulkan</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="Core">
-      <UniqueIdentifier>{9e6320ab-7f97-497f-8fb8-099cf5aa2a68}</UniqueIdentifier>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Core\D3D12">
-      <UniqueIdentifier>{00e3b17d-ec46-46f2-a06a-d42bdafb0eff}</UniqueIdentifier>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Core\Resources">
-      <UniqueIdentifier>{b8399f64-b27c-4f10-ac2d-a256810dd6c5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\Vulkan">
-      <UniqueIdentifier>{4aa30b29-8a90-4288-b3ff-915e5a8e7b97}</UniqueIdentifier>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Core\D3D12\D3D12Device.cpp">
-      <Filter>Core\D3D12</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\D3D12\D3D12Adapter.cpp">
-      <Filter>Core\D3D12</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\D3D12\D3D12SwapChain.cpp">
-      <Filter>Core\D3D12</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\IAdapter.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\D3D12\D3D12ResourceCommandBuffer.cpp">
-      <Filter>Core\D3D12</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\D3D12\D3D12ResourceAllocator.cpp">
-      <Filter>Core\D3D12</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\D3D12\D3D12CommandBuffer.cpp">
-      <Filter>Core\D3D12</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\ISwapChain.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Vulkan\VulkanDevice.cpp">
-      <Filter>Core\Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\D3D12\D3D12RHI.cpp">
-      <Filter>Core\D3D12</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Vulkan\VulkanAdapter.cpp">
-      <Filter>Core\Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Vulkan\VulkanRHI.cpp">
-      <Filter>Core\Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Vulkan\VulkanSwapChain.cpp">
-      <Filter>Core\Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Vulkan\VulkanCommandBuffer.cpp">
-      <Filter>Core\Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Vulkan\VulkanFence.cpp">
-      <Filter>Core\Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\D3D12\D3D12Fence.cpp">
-      <Filter>Core\D3D12</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Vulkan\VulkanSemaphore.cpp">
-      <Filter>Core\Vulkan</Filter>
+    <ClCompile Include="render.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

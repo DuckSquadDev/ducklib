@@ -9,15 +9,15 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(${PROJECT_NAME} STATIC
-        ../include/core/logging/logger.h
-        ../include/core/app_window.h
-        ../include/core/win/win_app_window.h
+        ../include/ducklib/core/logging/logger.h
+        ../include/ducklib/core/app_window.h
+        ../include/ducklib/core/win/win_app_window.h
         src/logger.cpp
         src/win/win_app_window.cpp
-        ../include/math/math.h
+        ../include/ducklib/math/math.h
         src/math.cpp
-        ../include/core/logging/log_level.h
-        ../include/core/unicode.h
+        ../include/ducklib/core/logging/log_level.h
+        ../include/ducklib/core/unicode.h
         src/unicode.cpp)
 
 target_compile_options(${PROJECT_NAME} PRIVATE

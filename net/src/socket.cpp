@@ -1,11 +1,22 @@
-﻿#include "net/Socket.h"
-#include "net/Net.h"
+﻿#include "ducklib/net/Socket.h"
+#include "ducklib/net/Net.h"
 
 #include <cassert>
 #include <exception>
 #include <WS2tcpip.h>
 
 namespace ducklib::net {
+Socket::Socket(Socket&& other) noexcept
+    : socket_handle(INVALID_SOCKET)
+    , address("127.0.0.1", 0) {
+    auto temp_socket = other.socket_handle;
+    auto temp_address = other.address;
+    other.socket_handle = socket_handle;
+    other.address = address;
+    socket_handle = temp_socket;
+    address = temp_address;
+}
+
 Socket::Socket(uint16_t bindPort)
     : socket_handle(INVALID_SOCKET) {
     // Create socket and set options
@@ -44,9 +55,11 @@ Socket::Socket(uint16_t bindPort)
 }
 
 Socket::~Socket() {
-    assert(socket_handle != INVALID_SOCKET);
-
-    closesocket(socket_handle);
+    if (socket_handle != INVALID_SOCKET) {
+        closesocket(socket_handle);
+    }
+    
+    socket_handle = INVALID_SOCKET;
 }
 
 auto Socket::get_port() const -> uint16_t {

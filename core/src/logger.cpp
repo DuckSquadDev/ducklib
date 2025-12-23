@@ -3,7 +3,7 @@
 #include <iterator>
 #include <array>
 
-#include "../../include/core/logging/logger.h"
+#include "ducklib/core/logging/logger.h"
 
 
 namespace ducklib {

@@ -1,6 +1,6 @@
 #include <cassert>
 
-#include "net/serialization.h"
+#include "ducklib/net/serialization.h"
 
 namespace ducklib::net {
 bool NetWriteStream::serialize_data(std::byte* data, uint32_t data_bit_size) {
@@ -10,7 +10,7 @@ bool NetWriteStream::serialize_data(std::byte* data, uint32_t data_bit_size) {
         return false;
     }
     
-    auto remaining_scratch_bits = SCRATCH_SIZE_BITS - scratch_bits;
+    uint8_t remaining_scratch_bits = SCRATCH_SIZE_BITS - scratch_bits;
 
     // First part
     if (data_bit_size <= remaining_scratch_bits) {
@@ -34,14 +34,14 @@ bool NetWriteStream::serialize_data(std::byte* data, uint32_t data_bit_size) {
     auto bits_to_write = data_bit_size - head_tail_bits;
 
     // Middle part
-    auto whole_data_bytes_left = bits_to_write >> 3;
-    auto data_bytes_written = 0;
+    const auto whole_data_bytes_left = bits_to_write >> 3;
+    auto data_bytes_written = 0U;
     auto bytes_written = bits_written >> 3;
-    auto data_bit_offset = head_tail_bits;
+    const auto data_bit_offset = head_tail_bits;
     if (data_bit_offset == 0) {
         memcpy(&buffer[bytes_written], &data[data_bytes_written], whole_data_bytes_left);
     } else {
-        auto rev_data_offset = 8 - data_bit_offset;
+        const auto rev_data_offset = 8 - data_bit_offset;
 
         for (auto i = data_bytes_written; i < data_bytes_written + whole_data_bytes_left; ++i) {
             buffer[bytes_written++] = (data[i] >> data_bit_offset) | (data[i+1] << rev_data_offset);
@@ -55,7 +55,7 @@ bool NetWriteStream::serialize_data(std::byte* data, uint32_t data_bit_size) {
     if (bits_to_write > 0) {
         auto mask = ~0ULL >> (SCRATCH_SIZE_BITS - bits_to_write);
         scratch = (static_cast<uint8_t>(data[data_bytes_written]) >> data_bit_offset) & mask;
-        scratch_bits = bits_to_write;
+        scratch_bits = (uint8_t)bits_to_write;
     }
 
     bits_written += data_bit_size;
@@ -68,7 +68,7 @@ void NetWriteStream::align_to_byte() {
 }
 
 uint16_t NetWriteStream::bits_left() const {
-    return buffer.size_bytes() * 8 - bits_written - scratch_bits;
+    return uint16_t(buffer.size_bytes() * 8 - bits_written - scratch_bits);
 }
 
 bool NetWriteStream::flush_scratch() {
@@ -82,7 +82,7 @@ bool NetWriteStream::flush_scratch() {
 
     [[likely]]
     if (scratch_bytes == sizeof(scratch)) {
-        for (auto i = 0; i < sizeof(scratch); ++i) {
+        for (auto i = 0U; i < sizeof(scratch); ++i) {
             buffer[bytes_written++] = static_cast<std::byte>((scratch >> (i * 8)) & 0xff);
         }
         bits_written += SCRATCH_SIZE_BITS;
@@ -167,7 +167,7 @@ void NetReadStream::align_to_byte() {
 }
 
 uint16_t NetReadStream::bits_left() const {
-    return (bit_size - bits_read) + (scratch_bits - scratch_bits_consumed);
+    return uint16_t((bit_size - bits_read) + (scratch_bits - scratch_bits_consumed));
 }
 
 bool NetReadStream::read_scratch() {
@@ -181,7 +181,7 @@ bool NetReadStream::read_scratch() {
     auto bytes_to_read = bits_to_read >> 3;
     scratch = 0;
     
-    for (auto i = 0; i < bytes_to_read; ++i) {
+    for (auto i = 0U; i < bytes_to_read; ++i) {
         scratch |= static_cast<ScratchType>(static_cast<uint8_t>(buffer[total_bytes_read + i])) << (8 * i);
     }
     
@@ -194,7 +194,7 @@ bool NetReadStream::read_scratch() {
     }
     
     bits_read += bits_to_read;
-    scratch_bits = bits_to_read;
+    scratch_bits = (uint8_t)bits_to_read;
     scratch_bits_consumed = 0;
 
     return true;

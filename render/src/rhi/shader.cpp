@@ -1,7 +1,7 @@
 #include <filesystem>
 
-#include "render/rhi/shader.h"
-#include "render/render_util.h"
+#include "ducklib/render/rhi/shader.h"
+#include "ducklib/render/render_util.h"
 
 namespace ducklib::render {
 void compile_shader(const wchar_t* filename, ShaderType shader_type, const char* entry_point, Shader* shader_out) {

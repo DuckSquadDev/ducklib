@@ -3,17 +3,17 @@
 #include <print>
 #include <thread>
 
-#include "core/win/win_app_window.h"
-#include "math/math.h"
-#include "../../../include/render/gui/font.h"
-#include "core/unicode.h"
-#include "input/input.h"
-#include "render/render_util.h"
-#include "render/resource_manager.h"
-#include "render/gui/gui.h"
-#include "render/rhi/rhi.h"
-#include "render/rhi/types.h"
-#include "render/rhi/shader.h"
+#include "ducklib/core/win/win_app_window.h"
+#include "ducklib/core/math.h"
+#include "ducklib/render/gui/font.h"
+#include "ducklib/core/unicode.h"
+#include "ducklib/input/input.h"
+#include "ducklib/render/render_util.h"
+#include "ducklib/render/resource_manager.h"
+#include "ducklib/render/gui/gui.h"
+#include "ducklib/render/rhi/rhi.h"
+#include "ducklib/render/rhi/types.h"
+#include "ducklib/render/rhi/shader.h"
 
 using namespace ducklib;
 

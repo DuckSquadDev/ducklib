@@ -2,8 +2,8 @@
 #include <format>
 #include <stdexcept>
 
-#include "net/Net.h"
-#include "core/logging/logger.h"
+#include "ducklib/net/Net.h"
+#include "ducklib/core/logging/logger.h"
 
 namespace ducklib::net
 {
@@ -25,20 +25,5 @@ void net_shutdown()
         int errorCode = WSAGetLastError();
         throw std::runtime_error(std::format("WinSock cleanup failed ({})", errorCode));
     }
-}
-
-template <typename... Args>
-void net_log_error(const char* text, Args... args)
-{
-    // static Logger logger;
-    //
-    // logger.log_error(text, args...);
-}
-
-template <typename... Args>
-void net_fail(const std::string& text, Args... args)
-{
-    // net_log_error(text, args...);
-    // exit(0);
 }
 }

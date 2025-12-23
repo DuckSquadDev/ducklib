@@ -1,6 +1,6 @@
-#include "render/rhi/types.h"
+#include "ducklib/render/rhi/types.h"
 
-#include "render/rhi/rhi.h"
+#include "ducklib/render/rhi/rhi.h"
 
 namespace ducklib::render {
 void SwapChain::present() {

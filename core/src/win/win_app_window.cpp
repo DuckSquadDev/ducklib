@@ -1,4 +1,4 @@
-#include "core/win/win_app_window.h"
+#include "ducklib/core/win/win_app_window.h"
 
 namespace ducklib {
 auto __stdcall win_app_window_proc(HWND window, unsigned int msg, WPARAM w_param, LPARAM l_param) -> LRESULT;
@@ -23,7 +23,7 @@ WinAppWindow::WinAppWindow(std::string_view title, int width, int height) {
     adjusted_rect.right += 8; // 4 pixel wide borders
     adjusted_rect.bottom += 31; // Don't even know the exact ones as caption can be handled but WS_OVERLAPPEDWINDOW just doesn't work
     
-    window_handle = CreateWindowEx(
+    window_handle = CreateWindowExA(
         0,
         DEFAULT_WINDOW_CLASS_NAME,
         title.data(),

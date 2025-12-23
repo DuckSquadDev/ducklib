@@ -12,9 +12,9 @@ add_library(${PROJECT_NAME} STATIC
         src/Net.cpp
         src/Shared.cpp
         src/Socket.cpp
-        ../include/net/connection.h
+        ../include/ducklib/net/connection.h
         src/connection.cpp
-        ../include/net/serialization.h
+        ../include/ducklib/net/serialization.h
         src/serialization.cpp
 )
 target_compile_options(${PROJECT_NAME} PRIVATE
@@ -23,7 +23,14 @@ target_compile_options(${PROJECT_NAME} PRIVATE
         $<$<CONFIG:Release>:/O2 /DNDEBUG>
 )
 target_include_directories(${PROJECT_NAME} PUBLIC ../include)
+target_link_libraries(${PROJECT_NAME}
+        PUBLIC
+        ducklib-core
+        ws2_32)
 set_target_properties(${PROJECT_NAME} PROPERTIES
         PREFIX ""
         OUTPUT_NAME ${PROJECT_NAME}
         SUFFIX ".lib")
+
+
+add_subdirectory(tools/connection_peer)

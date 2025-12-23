@@ -19,97 +19,70 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Core\D3D12\D3D12CommandBuffer.cpp" />
-    <ClCompile Include="Core\D3D12\D3D12Fence.cpp" />
-    <ClCompile Include="Core\D3D12\D3D12ResourceAllocator.cpp" />
-    <ClCompile Include="Core\D3D12\D3D12ResourceCommandBuffer.cpp" />
-    <ClCompile Include="Core\D3D12\D3D12RHI.cpp" />
-    <ClCompile Include="Core\D3D12\D3D12SwapChain.cpp" />
-    <ClCompile Include="Core\IAdapter.cpp" />
-    <ClCompile Include="Core\ISwapChain.cpp" />
-    <ClCompile Include="Core\Vulkan\VulkanAdapter.cpp" />
-    <ClCompile Include="Core\Vulkan\VulkanCommandBuffer.cpp" />
-    <ClCompile Include="Core\Vulkan\VulkanDevice.cpp" />
-    <ClCompile Include="Core\Vulkan\VulkanFence.cpp" />
-    <ClCompile Include="Core\Vulkan\VulkanRHI.cpp" />
-    <ClCompile Include="Core\Vulkan\VulkanSemaphore.cpp" />
-    <ClCompile Include="Core\Vulkan\VulkanSwapChain.cpp" />
-    <ClInclude Include="Core\D3D12\D3D12CommandBuffer.h" />
-    <ClInclude Include="Core\D3D12\D3D12Common.h" />
-    <ClInclude Include="Core\D3D12\D3D12Fence.h" />
-    <ClInclude Include="Core\D3D12\D3D12Formats.h" />
-    <ClInclude Include="Core\D3D12\D3D12ResourceAllocator.h" />
-    <ClInclude Include="Core\D3D12\D3D12ResourceCommandBuffer.h" />
-    <ClInclude Include="Core\D3D12\D3D12ResourceStates.h" />
-    <ClInclude Include="Core\D3D12\D3D12RHI.h" />
-    <ClInclude Include="Core\D3D12\D3D12SwapChain.h" />
-    <ClInclude Include="Core\Handle.h" />
-    <ClInclude Include="Core\IAdapter.h" />
-    <ClInclude Include="Core\D3D12\D3D12Adapter.h" />
-    <ClInclude Include="Core\D3D12\D3D12Device.h" />
-    <ClInclude Include="Core\IDevice.h" />
-    <ClInclude Include="Core\ICommandBuffer.h" />
-    <ClInclude Include="Core\IFence.h" />
-    <ClInclude Include="Core\IFrameBuffer.h" />
-    <ClInclude Include="Core\IRHI.h" />
-    <ClInclude Include="Core\ISemaphore.h" />
-    <ClInclude Include="Core\ISwapChain.h" />
-    <ClInclude Include="Core\IResourceCommandBuffer.h" />
-    <ClCompile Include="Core\D3D12\D3D12Adapter.cpp" />
-    <ClCompile Include="Core\D3D12\D3D12Device.cpp" />
-    <ClInclude Include="Core\IPass.h" />
-    <ClInclude Include="Core\PassDescription.h" />
-    <ClInclude Include="Core\PipelineState.h" />
-    <ClInclude Include="Core\Resources\Buffer.h" />
-    <ClInclude Include="Core\Resources\Constants.h" />
-    <ClInclude Include="Core\Resources\ImageBuffer.h" />
-    <ClInclude Include="Core\Resources\InputDescription.h" />
-    <ClInclude Include="Core\Resources\PrimitiveTopology.h" />
-    <ClInclude Include="Core\Resources\Rect.h" />
-    <ClInclude Include="Core\Resources\ResourceStates.h" />
-    <ClInclude Include="Core\Resources\Viewport.h" />
-    <ClInclude Include="Core\Vulkan\VulkanAdapter.h" />
-    <ClInclude Include="Core\Vulkan\VulkanCommandBuffer.h" />
-    <ClInclude Include="Core\Vulkan\VulkanCommon.h" />
-    <ClInclude Include="Core\Vulkan\VulkanDevice.h" />
-    <ClInclude Include="Core\Vulkan\VulkanFence.h" />
-    <ClInclude Include="Core\Vulkan\VulkanFrameBuffer.h" />
-    <ClInclude Include="Core\Vulkan\VulkanPass.h" />
-    <ClInclude Include="Core\Vulkan\VulkanRHI.h" />
-    <ClInclude Include="Core\Vulkan\VulkanSemaphore.h" />
-    <ClInclude Include="Core\Vulkan\VulkanSwapChain.h" />
+    <ClCompile Include="src\gui\font.cpp" />
+    <ClCompile Include="src\gui\gui.cpp" />
+    <ClCompile Include="src\render_util.cpp" />
+    <ClCompile Include="src\resource_manager.cpp" />
+    <ClCompile Include="src\rhi\device.cpp" />
+    <ClCompile Include="src\rhi\rhi.cpp" />
+    <ClCompile Include="src\rhi\rhi_old.cpp" />
+    <ClCompile Include="src\rhi\shader.cpp" />
+    <ClCompile Include="src\rhi\types.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\ducklib\render\gui\foh" />
+    <ClInclude Include="include\ducklib\render\gui\gui.h" />
+    <ClInclude Include="include\ducklib\render\render_util.h" />
+    <ClInclude Include="include\ducklib\render\resource_manager.h" />
+    <ClInclude Include="include\ducklib\render\rhi\command_list.h" />
+    <ClInclude Include="include\ducklib\render\rhi\constants.h" />
+    <ClInclude Include="include\ducklib\render\rhi\device.h" />
+    <ClInclude Include="include\ducklib\render\rhi\rhi.h" />
+    <ClInclude Include="include\ducklib\render\rhi\shader.h" />
+    <ClInclude Include="include\ducklib\render\rhi\swap_chain.h" />
+    <ClInclude Include="include\ducklib\render\rhi\types.h" />
+    <ClInclude Include="src\rhi\resources\Buffer.h" />
+    <ClInclude Include="src\rhi\resources\Constants.h" />
+    <ClInclude Include="src\rhi\resources\ImageBuffer.h" />
+    <ClInclude Include="src\rhi\resources\InputDescription.h" />
+    <ClInclude Include="src\rhi\resources\PrimitiveTopology.h" />
+    <ClInclude Include="src\rhi\resources\Rect.h" />
+    <ClInclude Include="src\rhi\resources\ResourceStates.h" />
+    <ClInclude Include="src\rhi\resources\Viewport.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="src\Roboto-Regular.ttf" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <VCProjectVersion>16.0</VCProjectVersion>
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{2D205585-3F46-4F1F-B652-1055E1955B57}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{b7b6df7f-8ba0-45dd-982a-005cd597659c}</ProjectGuid>
-    <RootNamespace>Render</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <RootNamespace>render</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -120,99 +93,97 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\SharedDefault.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\SharedDefault.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\SharedDefault.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\SharedDefault.props" />
   </ImportGroup>
+  <Import Project="$(SolutionDir)core\core.props" />
+  <Import Project="$(SolutionDir)input\input.props" />
+  <Import Project="$(SolutionDir)third_party\third_party.props" />
+  <Import Project="$(ProjectDir)render.props" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>../../Core;$(IncludePath)</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>false</LinkIncremental>
+    <TargetName>ducklib-$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-    </ClCompile>
+      </ClCompile>
     <Link>
-      <SubSystem>
-      </SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-    </ClCompile>
-    <Link>
-      <SubSystem>
-      </SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>DL_TRACK_ALLOCS;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>
-      </SubSystem>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
-      <SubSystem>
-      </SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>

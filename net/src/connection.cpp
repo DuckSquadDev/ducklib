@@ -1,9 +1,15 @@
 #include <array>
 
-#include "net/connection.h"
-#include "net/serialization.h"
+#include "ducklib/net/connection.h"
+#include "ducklib/net/serialization.h"
 
 namespace ducklib::net {
+Connection::Connection(std::string_view ip, uint16_t port, const std::shared_ptr<Socket>& socket)
+    : socket(socket), remote_address(Address(ip, port)) {}
+
+Connection::Connection(std::string_view ip, uint16_t port)
+    : socket(std::make_shared<Socket>(Socket(0))), remote_address(Address(ip, port)) {}
+
 MessageIdType Connection::send_reliable(
     const std::byte* message_data,
     uint16_t message_bit_size,
@@ -11,7 +17,7 @@ MessageIdType Connection::send_reliable(
     bool ordered,
     uint8_t priority) {
     auto packet_id = channel_message_counter[type]++;
-    auto byte_size = std::ceil(message_bit_size / 8.0f);
+    auto byte_size = static_cast<uint16_t>(std::ceil(message_bit_size / 8.0));
     PacketMessage message = {
         std::make_unique<std::byte[]>(byte_size),
         message_bit_size,

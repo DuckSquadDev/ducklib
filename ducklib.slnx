@@ -1,0 +1,48 @@
+<Solution>
+  <Folder Name="/core/">
+    <Project Path="core/core.vcxproj">
+      <Platform Project="Win32" />
+    </Project>
+  </Folder>
+  <Folder Name="/input/">
+    <Project Path="input/input.vcxproj">
+      <BuildDependency Project="core/core.vcxproj" />
+      <Platform Project="Win32" />
+    </Project>
+  </Folder>
+  <Folder Name="/net/">
+    <Project Path="net/net.vcxproj">
+      <BuildDependency Project="core/core.vcxproj" />
+      <Platform Project="Win32" />
+    </Project>
+  </Folder>
+  <Folder Name="/net/test/">
+    <Project Path="net/test/net_shared_unit_tests/net_shared_unit_tests.vcxproj">
+      <BuildDependency Project="core/core.vcxproj" />
+      <BuildDependency Project="net/net.vcxproj" />
+      <Platform Project="Win32" />
+    </Project>
+  </Folder>
+  <Folder Name="/net/tools/">
+    <Project Path="net/tools/connection_peer/connection_peer.vcxproj">
+      <Platform Project="Win32" />
+    </Project>
+  </Folder>
+  <Folder Name="/render/">
+    <Project Path="render/render.vcxproj">
+      <BuildDependency Project="core/core.vcxproj" />
+      <BuildDependency Project="input/input.vcxproj" />
+      <Platform Project="Win32" />
+    </Project>
+  </Folder>
+  <Folder Name="/render/test/">
+    <Project Path="render/test/render_hello_triangle/render_hello_triangle.vcxproj">
+      <BuildDependency Project="core/core.vcxproj" />
+      <BuildDependency Project="render/render.vcxproj" />
+      <Platform Project="Win32" />
+    </Project>
+    <Project Path="render/test/render_hello_gui/render_hello_gui.vcxproj">
+      <Platform Project="Win32" />
+    </Project>
+  </Folder>
+</Solution>

@@ -5,12 +5,12 @@
 #include <span>
 #include <cassert>
 
-#include "input/input.h"
+#include "ducklib/input/input.h"
 
 #include <iostream>
 #include <print>
 
-#include "core/unicode.h"
+#include "ducklib/core/unicode.h"
 
 namespace ducklib {
 void InputButtonState::clear() {
@@ -18,7 +18,6 @@ void InputButtonState::clear() {
         mouse_buttons[i] = false;
     }
 }
-
 
 std::array<RAWINPUTDEVICE, 2> get_raw_device_list(HWND hwnd) {
     std::array<RAWINPUTDEVICE, 2> raw_devices = {};
@@ -124,7 +123,7 @@ void process_win_input(AppWindow* app_window, InputState& input_state, uint32_t 
             check_mouse_button_down(input_state, 2, mouse_input.usButtonFlags, RI_MOUSE_BUTTON_3_DOWN);
             check_mouse_button_down(input_state, 3, mouse_input.usButtonFlags, RI_MOUSE_BUTTON_4_DOWN);
             check_mouse_button_down(input_state, 4, mouse_input.usButtonFlags, RI_MOUSE_BUTTON_5_DOWN);
-            
+
             check_mouse_button_up(input_state, 0, mouse_input.usButtonFlags, RI_MOUSE_BUTTON_1_UP);
             check_mouse_button_up(input_state, 1, mouse_input.usButtonFlags, RI_MOUSE_BUTTON_2_UP);
             check_mouse_button_up(input_state, 2, mouse_input.usButtonFlags, RI_MOUSE_BUTTON_3_UP);
