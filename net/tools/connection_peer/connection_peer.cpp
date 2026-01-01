@@ -17,7 +17,7 @@ void read_input(std::span<char> buffer, uint32_t& caret) {
         return;
     }
     
-    buffer[caret++] = ch;
+    buffer[caret++] = (char)ch;
 }
 
 int main() {
@@ -50,15 +50,15 @@ int main() {
                             auto port_str = address.substr(port_index + 1);
                             std::from_chars(port_str.data(), port_str.data() + port_str.size(), port);
                             address_no_port = address.substr(0, port_index);
-                            std::cout << port << std::endl;
-                            std::cout << address_no_port << std::endl;
+                            std::cout << port << '\n';
+                            std::cout << address_no_port << '\n';
                         }
                         
                         connection = std::make_unique<net::Connection>(address_no_port, port);
                     }
                 } else {
                     // TODO: Send over connection
-                    std::cout << "\033[A\033[K" << "You: " << line << std::endl;
+                    std::cout << "\033[A\033[K" << "You: " << line << '\n';
                 }
             }
             }

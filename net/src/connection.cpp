@@ -57,4 +57,23 @@ void Connection::serialize(NetWriteStream& writer, PacketMessage& message) {
     serialize_int(writer, message.data_bit_size, static_cast<uint16_t>(0), MTU);
     serialize_data(writer, message.data.get(), message.data_bit_size);
 }
+
+ConnectionListener::ConnectionListener(uint16_t port)
+    : socket(port) {}
+
+bool ConnectionListener::has_connection_request() {
+    Address from = {};
+    std::array<std::byte, MTU> buffer = {};
+    auto bytes_received = socket.receive(from, buffer);
+    
+    if (bytes_received == 0) {
+        
+    }
+}
+
+std::optional<Connection> ConnectionListener::accept() {
+    
+    
+    return
+}
 }
